@@ -2,10 +2,12 @@ from ursina import *
 from ursina.shaders import lit_with_shadows_shader
 import random
 from math import *
-time_speed = 10000000000000000
+
+time_speed = 1000000000000
 time_rate = 0.00000000000001 * time_speed
 base_time = time.time()
 time_count = 0
+
 class BlackHole(Entity):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -53,10 +55,10 @@ for i in range (numstars):
     a = random.uniform(0, 2 * pi)
     point.velocity = Vec3(v * cos(a + pi / 2), 0, v * sin(a + pi / 2))
     
-    point.position = Vec3(r * cos(a), random.uniform(-10, 10), r * sin(a))
+    point.position = Vec3(r * cos(a), 1 / (1 + exp(r/100*3 - 3))*random.uniform(-30, 30), r * sin(a))
     
     points.append(point)
-    
+
 distances = []
 
 for i in range(len(points)):
