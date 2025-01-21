@@ -2,9 +2,10 @@ from ursina import *
 from ursina.shaders import lit_with_shadows_shader
 import random
 from math import *
-
-
-time_speed = 1
+time_speed = 10000000000000000
+time_rate = 0.00000000000001 * time_speed
+base_time = time.time()
+time_count = 0
 class BlackHole(Entity):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -13,11 +14,15 @@ class BlackHole(Entity):
         self.update_number = 0
         self.update_rate = 1
     def update(self):
+        global time_count, base_time
         if self.update_number % self.update_rate == 0:
-            self.position += self.velocity * time_speed
+            self.position += self.velocity * time_rate
             for i in range(len(points)):
-                points[i].velocity -= (points[i].position - Vec3(0, 0, 0)).normalized() * (1 / (distance(points[i].position, Vec3(0, 0, 0)) ** 2)) * self.blackhole_gravity * time_speed
+                points[i].velocity -= (points[i].position - Vec3(0, 0, 0)).normalized() * (1 / (distance(points[i].position, Vec3(0, 0, 0)) ** 2)) * self.blackhole_gravity * time_rate
         self.update_number += 1
+        time_count += (time.time() - base_time)*time_speed
+        base_time = time.time()
+        print(time_count)
 
 class Star(Entity):
     def __init__(self, **kwargs):
@@ -27,7 +32,7 @@ class Star(Entity):
         self.update_rate = 1
     def update(self):
         if self.update_number % self.update_rate == 0:
-            self.position += self.velocity * time.dt * time_speed
+            self.position += self.velocity * time.dt * time_rate
         self.update_number += 1
 
 app = Ursina()
