@@ -41,7 +41,7 @@ for i in range (numstars):
     point = Star(model='sphere', color=color.red, scale=1, shader=lit_with_shadows_shader)
     #1 unitée = 100 parsecs = 326 années lumière
 
-    r = random.uniform(10,270)
+    r = random.uniform(10,162.2)
     v = sqrt(center.blackhole_gravity / r) * 5
     a = random.uniform(0, 2 * pi)
     point.velocity = Vec3(v * cos(a + pi / 2), v * sin(a + pi / 2), 0)
