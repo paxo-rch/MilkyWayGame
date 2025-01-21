@@ -6,9 +6,11 @@ from math import *
 
 app = Ursina()
 
+sky = Sky(texture='space.hdr')
+
 points = []
 blackhole = 1
-numstars = 100
+numstars = 1000
 
 class Star(Entity):
     def __init__(self, **kwargs):
@@ -16,17 +18,18 @@ class Star(Entity):
         self.velocity = Vec3(0, 0, 0)
         
     def update(self):
-        self.position += self.velocity * 0.01
+        self.position += self.velocity * time.dt
 
 for i in range (numstars):
-    point = Star(model='sphere', color=color.random_color(), scale=2, shader=lit_with_shadows_shader)
+    point = Star(model='sphere', color=color.red, scale=1, shader=lit_with_shadows_shader)
     
     r = random.uniform(5,200)
-    v = sqrt(blackhole / r) * 10
+    v = sqrt(blackhole / r) * 5
     a = random.uniform(0, 2 * pi)
     point.velocity = Vec3(v * cos(a + pi / 2), v * sin(a + pi / 2), 0)
     
-    point.position = Vec3(r * cos(a), r * sin(a), random.uniform(-1, 1))
+    point.position = Vec3(r * cos(a), r * sin(a), random.uniform(-10, 10))
+    
     points.append(point)
 
 def update():
