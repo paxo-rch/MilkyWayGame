@@ -35,7 +35,7 @@ class Star(Entity):
         if self.update_number % self.update_rate == 0:
             self.position += self.velocity * time.dt
         self.update_number += 1
-center = BlackHole(model='sphere', color=color.yellow, scale=1, shader=lit_with_shadows_shader)
+center = BlackHole(model='sphere', color=color.black, scale=1, shader=lit_with_shadows_shader)
 
 for i in range (numstars):
     point = Star(model='sphere', color=color.red, scale=1, shader=lit_with_shadows_shader)
