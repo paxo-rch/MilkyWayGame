@@ -1,16 +1,8 @@
 from ursina import *
 from ursina.shaders import lit_with_shadows_shader
-
 import random
 from math import *
-
-app = Ursina()
-
-sky = Sky(texture='space.hdr')
-
-points = []
-numstars = 1000
-
+time_speed = 0.01
 class BlackHole(Entity):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -20,9 +12,9 @@ class BlackHole(Entity):
         self.update_rate = 1
     def update(self):
         if self.update_number % self.update_rate == 0:
-            self.position += self.velocity
+            self.position += self.velocity * time_speed
             for i in range(len(points)):
-                points[i].velocity -= (points[i].position - Vec3(0, 0, 0)).normalized() * (1 / (distance(points[i].position, Vec3(0, 0, 0)) ** 2)) * self.blackhole_gravity
+                points[i].velocity -= (points[i].position - Vec3(0, 0, 0)).normalized() * (1 / (distance(points[i].position, Vec3(0, 0, 0)) ** 2)) * self.blackhole_gravity * time_speed
         self.update_number += 1
 
 class Star(Entity):
@@ -33,14 +25,23 @@ class Star(Entity):
         self.update_rate = 1
     def update(self):
         if self.update_number % self.update_rate == 0:
-            self.position += self.velocity * time.dt
+            self.position += self.velocity * time.dt * time_speed
         self.update_number += 1
-center = BlackHole(model='sphere', color=color.black, scale=1, shader=lit_with_shadows_shader)
+
+app = Ursina()
+
+sky = Sky(texture='space.hdr')
+
+points = []
+numstars = 1000
+
+center = BlackHole(model='sphere', color=color.black, scale=0.01, shader=lit_with_shadows_shader)
 
 for i in range (numstars):
     point = Star(model='sphere', color=color.red, scale=1, shader=lit_with_shadows_shader)
-    
-    r = random.uniform(5,200)
+    #1 unitée = 100 parsecs = 326 années lumière
+
+    r = random.uniform(10,270)
     v = sqrt(center.blackhole_gravity / r) * 5
     a = random.uniform(0, 2 * pi)
     point.velocity = Vec3(v * cos(a + pi / 2), v * sin(a + pi / 2), 0)
@@ -48,9 +49,14 @@ for i in range (numstars):
     point.position = Vec3(r * cos(a), r * sin(a), random.uniform(-10, 10))
     
     points.append(point)
-
-
-
+distances = []
+for i in range(len(points)):
+    for j in range(len(points)):
+        if i != j:
+            distances.append(distance(points[i].position, points[j].position))
+print(max(distances))
+print(min(distances))
+print(sum(distances) / len(distances))
 EditorCamera()
 
 class Player(Entity):
