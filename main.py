@@ -98,7 +98,7 @@ thin_slider.label.position = (.25, -.1)
 
 def up_logarithm():
     global time_speed
-    thin_slider.label.text = str(10 ** (thin_slider.value*15))
+    thin_slider.label.text = "1s = " + str(10 ** (thin_slider.value*15)) + "s"
     time_speed = (10 ** (thin_slider.value*15))
 
 up_logarithm()
