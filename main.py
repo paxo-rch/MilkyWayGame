@@ -3,8 +3,8 @@ from ursina.shaders import lit_with_shadows_shader
 import random
 from math import *
 
-time_speed = 1000000000000
-time_rate = 0.00000000000001 * time_speed
+time_speed = 1
+time_rate = time_speed * (250000000*365*24*3600)
 base_time = time.time()
 time_count = 0
 
@@ -17,13 +17,10 @@ class BlackHole(Entity):
         self.update_rate = 1
     def update(self):
         global time_count, base_time
-        if self.update_number % self.update_rate == 0:
-            self.position += self.velocity * time_rate
-            for i in range(len(points)):
-                points[i].velocity -= (points[i].position - Vec3(0, 0, 0)).normalized() * (1 / (distance(points[i].position, Vec3(0, 0, 0)) ** 2)) * self.blackhole_gravity * time_rate
-        self.update_number += 1
-        time_count += (time.time() - base_time)*time_speed
-        base_time = time.time()
+        
+        
+        time_count += time.dt*time_rate
+        
         print(time_count)
 
 class Star(Entity):
@@ -32,10 +29,14 @@ class Star(Entity):
         self.velocity = Vec3(0, 0, 0)
         self.update_number = 0
         self.update_rate = 1
+        
+        self.initial_angle = 0
+        self.orbit_radius = 0
+        self.angular_velocity = 0
+        
     def update(self):
-        if self.update_number % self.update_rate == 0:
-            self.position += self.velocity * time.dt * time_rate
-        self.update_number += 1
+        self.x = self.orbit_radius * cos(self.initial_angle + self.angular_velocity * time_count)
+        self.z = self.orbit_radius * sin(self.initial_angle + self.angular_velocity * time_count)
 
 app = Ursina()
 
@@ -51,15 +52,18 @@ for i in range (numstars):
     #1 unitée = 100 parsecs = 326 années lumière
 
     r = random.uniform(10,162.2)
-    v = sqrt(center.blackhole_gravity / r) * 8
+    v = sqrt(center.blackhole_gravity / r)
     a = random.uniform(0, 2 * pi)
-    point.velocity = Vec3(v * cos(a + pi / 2), 0, v * sin(a + pi / 2))
+    
+    point.angular_velocity = v / r
+    point.orbit_radius = r
+    point.initial_angle = a
     
     point.position = Vec3(r * cos(a), 1 / (1 + exp(r/100*3 - 3))*random.uniform(-30, 30), r * sin(a))
     
     points.append(point)
 
-distances = []
+"""distances = []
 
 for i in range(len(points)):
     for j in range(len(points)):
@@ -68,7 +72,7 @@ for i in range(len(points)):
             
 print(max(distances))
 print(min(distances))
-print(sum(distances) / len(distances))
+print(sum(distances) / len(distances))"""
 EditorCamera()
 
 class Player(Entity):
