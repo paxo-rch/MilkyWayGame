@@ -3,16 +3,18 @@ from ursina.shaders import lit_with_shadows_shader
 import random
 from math import *
 
-time_speed = 1
-time_rate = time_speed * (250000000*365*24*3600)
+time_speed = 1 # secondes (r) par seconde (g)
+time_rate = 1 * time_speed # (250000000*365*24*3600*10000) * time_speed
 base_time = time.time()
 time_count = 0
+
+scale = 100 / 5e20
 
 class BlackHole(Entity):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.velocity = Vec3(0, 0, 0)
-        self.blackhole_gravity = 1
+        self.blackhole_gravity = 1.9884e30
         self.update_number = 0
         self.update_rate = 1
     def update(self):
@@ -21,7 +23,7 @@ class BlackHole(Entity):
         
         time_count += time.dt*time_rate
         
-        print(time_count)
+        #print(time_count)
 
 class Star(Entity):
     def __init__(self, **kwargs):
@@ -35,8 +37,8 @@ class Star(Entity):
         self.angular_velocity = 0
         
     def update(self):
-        self.x = self.orbit_radius * cos(self.initial_angle + self.angular_velocity * time_count)
-        self.z = self.orbit_radius * sin(self.initial_angle + self.angular_velocity * time_count)
+        self.x = self.orbit_radius * scale * cos(self.initial_angle + self.angular_velocity * time_count)
+        self.z = self.orbit_radius * scale * sin(self.initial_angle + self.angular_velocity * time_count)
 
 app = Ursina()
 
@@ -51,15 +53,17 @@ for i in range (numstars):
     point = Star(model='sphere', color=color.red, scale=1, shader=lit_with_shadows_shader)
     #1 unitée = 100 parsecs = 326 années lumière
 
-    r = random.uniform(10,162.2)
-    v = sqrt(center.blackhole_gravity / r)
+    rm = 5e20 # en m
+    r = random.uniform(rm/20,rm)
+    v = sqrt(center.blackhole_gravity * 6.674e-11 / r)
     a = random.uniform(0, 2 * pi)
     
     point.angular_velocity = v / r
+    print(point.angular_velocity)
     point.orbit_radius = r
     point.initial_angle = a
     
-    point.position = Vec3(r * cos(a), 1 / (1 + exp(r/100*3 - 3))*random.uniform(-30, 30), r * sin(a))
+    point.position = Vec3(0, 1 / (1 + exp((r * scale)/50*3 - 3))*random.uniform(-20, 20), 0)
     
     points.append(point)
 
