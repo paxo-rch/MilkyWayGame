@@ -12,6 +12,8 @@ time_count = 0
 
 scale = 100 / 5e20
 
+e = Entity(model='sphere', color=color.red, scale=1, shader=lit_with_shadows_shader)
+
 class BlackHole(Entity):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -23,15 +25,14 @@ class BlackHole(Entity):
         global time_count, base_time
         time_rate = 1 * time_speed
         time_count += time.dt*time_rate
-        print(time_count)
+        #print(time_count)
 
 class Star(Entity):
     def __init__(self, **kwargs):
-        super().__init__(**kwargs)
+        super().__init__(model='sphere', color=color.red, shader = lit_with_shadows_shader)
         self.velocity = Vec3(0, 0, 0)
         self.update_number = 0
         self.update_rate = 1
-        
         self.initial_angle = 0
         self.orbit_radius = 0
         self.angular_velocity = 0
@@ -45,9 +46,9 @@ app = Ursina()
 sky = Sky(texture='space.hdr')
 
 points = []
-numstars = 1000
+numstars = 10000
 
-center = BlackHole(model='sphere', color=color.black, scale=0.01, shader=lit_with_shadows_shader)
+center = BlackHole(model='sphere', color=color.black, scale=0.01)
 
 for i in range (numstars):
     point = Star(model='sphere', color=color.red, scale=1, shader=lit_with_shadows_shader)
