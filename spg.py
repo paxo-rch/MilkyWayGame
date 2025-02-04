@@ -16,7 +16,7 @@ radius_galaxy = 3e16    # m
 radius_planet = 500e9   # m
 
 factor = 1 #1e-25
-time_factor = 10
+time_factor = 5
 
 objects = []
 

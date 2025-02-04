@@ -77,10 +77,11 @@ class Object:
         self.mass = mass
         self.radius = radius
 
-        self.angular_velocity = vec(0, 0, 0)
-        self.first_angular_position = vec(0, 0, 0)
-        self.angular_position = vec(0, 0, 0)
+        self.angular_velocity = 0
+        self.first_angular_position = 0
+        self.angular_position = 0
         self.orbit_radius = 0
+        self.orbit_angle = [(random()-0.5) * 2 * pi / 360 * 10, (random()-0.5) * 2 * pi / 360 * 10]
         self.position = vec(0, 0, 0)
 
         self.children = []
@@ -93,13 +94,16 @@ class Object:
 
     def genetateOrbit(self, radius, y_deviation=10, z_deviation=10):
         self.orbit_radius = radius
-        self.first_angular_position = vec(radians(randint(0, 360)), radians(randint(-y_deviation, y_deviation)), radians(randint(-z_deviation, z_deviation)))
-        v = sqrt(u.G * self.parent.mass / self.orbit_radius) * 2 * pi
-        self.angular_velocity = vec(0, v, 0)
+        self.first_angular_position = random()*2*pi
+        self.angular_velocity = sqrt(u.G * self.parent.mass / self.orbit_radius) * 2 * pi
 
     def updatePosition(self):
-        self.angular_position = self.first_angular_position + (self.angular_velocity * u.t)
-        self.position = vec.angle(self.angular_position.y, self.angular_position.z, self.orbit_radius)
+        self.angular_position = self.first_angular_position + self.angular_velocity * u.t
+        
+        x = self.orbit_radius * cos(self.orbit_angle[1]) * cos(self.angular_position) + self.orbit_radius * sin(self.orbit_angle[1]) * sin(self.orbit_angle[0]) * sin(self.angular_position)
+        y = self.orbit_radius * sin(self.orbit_angle[1]) * cos(self.angular_position) - self.orbit_radius * cos(self.orbit_angle[1]) * sin(self.orbit_angle[0]) * sin(self.angular_position)
+        z = self.orbit_radius * cos(self.orbit_angle[0]) * sin(self.angular_position)
+        self.position = vec(x, y, z)
 
     def getAbsolutePosition(self):
         if(self.parent and not isinstance(self.parent, Universe)):
