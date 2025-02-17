@@ -12,6 +12,12 @@ MAP_HEIGHT = 1080 * MAP_SCALE
 SCREEN_WIDTH = 1920
 SCREEN_HEIGHT = 1080
 
+PLANET_NUMBER = 500
+MOON_NUMBER = 5
+
+ROCKET_SPEED = 1
+ROCKET_TURN_SPEED = 16
+ROCKET_THROW_SPEED = 100
 pygame.init()
 screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
 objects = []
@@ -22,7 +28,6 @@ def posX(x):
 def posY(y):
     return SCREEN_HEIGHT//2 + (y - p.cursor[1]) * p.zoom
 
-
 class Image:
     def __init__(self):
         self.scale = 0.05
@@ -32,14 +37,14 @@ class Image:
     def setImage(self, image):
         if isinstance(image, str):
             self.image = pygame.image.load(image)
-            self.scaled_image = pygame.transform.scale(self.image,(self.image.get_width()*p.zoom*self.scale,self.image.get_width()*p.zoom*self.scale))
+            
         else:
             self.image = image
 
 
     def update(self):
         if self.image is not None:
-            self.scaled_image = pygame.transform.scale(self.image,(self.image.get_width()*p.zoom*self.scale,self.image.get_width()*p.zoom*self.scale))
+            self.scaled_image = pygame.transform.scale(self.image,(self.image.get_width()*p.zoom*self.scale,self.image.get_height()*p.zoom*self.scale))
 
 
 class Object:
@@ -57,12 +62,6 @@ class Object:
         self.transparent = False
         self.parent = None
         self.children = []
-
-    def setImage(self, image):
-        if isinstance(image, str):
-            self.image = pygame.image.load(image)
-        else:
-            self.image = image
         
     def setParent(self, parent, orbit_radius):
         self.parent = parent
@@ -115,9 +114,10 @@ class Player:
         self.vx = 0
         self.vy = 0
         self.angle = 0
-        self.force = 100
+        self.force = ROCKET_THROW_SPEED
         self.projection_length = 100
         self.throw = False
+        self.thrust = False
 
         self.icon_rocket = pygame.image.load("rocket.png")
 
@@ -136,11 +136,9 @@ class Player:
     
     def draw(self):
         #pygame.draw.circle(screen, (255, 0, 0), (posX(self.x), posY(self.y)), 10 * p.zoom)
-        if(not self.throw):
-            a_mvt = self.angle
-        else:
-            a_mvt = math.atan2(self.vy, self.vx)
-            self.angle = a_mvt
+
+        a_mvt = self.angle
+
 
         self.i = (self.i+1) % len(self.flame_animation)
 
@@ -149,7 +147,7 @@ class Player:
         rocket_scaled = pygame.transform.scale(self.icon_rocket, sprite_size)
         sprite_surface.blit(rocket_scaled, (0, 0))
         
-        if(self.throw):
+        if(self.thrust):
             flame_scaled = pygame.transform.scale(self.flame_animation[self.i], [sprite_size[0]/5, sprite_size[1]/3])
             sprite_surface.blit(flame_scaled, (sprite_size[0]*0.4, sprite_size[0]*0.7))
             
@@ -161,12 +159,11 @@ class Player:
 
     def update(self):
         keys = pygame.key.get_pressed()
-        if(not self.throw):
-            if keys[pygame.K_RIGHT]:
-                self.angle += 4 * math.pi / 360
-            if keys[pygame.K_LEFT]:
-                self.angle -= 4 * math.pi / 360
-        else:
+        if keys[pygame.K_RIGHT]:
+                self.angle += ROCKET_TURN_SPEED * math.pi / 360
+        elif keys[pygame.K_LEFT]:
+                self.angle -= ROCKET_TURN_SPEED * math.pi / 360
+        if self.throw:
             for i in objects:
                 if(i != self.planet):
                     dist = math.sqrt((i.getAbsoluteX() - self.x)**2 + (i.getAbsoluteY() - self.y)**2)
@@ -204,15 +201,12 @@ class Player:
                 self.y = 0
                 self.vy = abs(self.vy * 0.5)
 
-            if keys[pygame.K_RIGHT]:
-                self.vx += 0.2 * 10
-            if keys[pygame.K_LEFT]:
-                self.vx -= 0.2 * 10
-            if keys[pygame.K_UP]:
-                self.vy -= 0.2 * 10
-            if keys[pygame.K_DOWN]:
-                self.vy += 0.2 * 10
-            
+            if keys[pygame.K_SPACE]:
+                self.thrust = True
+                self.vx += math.cos(self.angle) * ROCKET_SPEED
+                self.vy += math.sin(self.angle) * ROCKET_SPEED
+            else:
+                self.thrust = False
 
             self.x += self.vx/10
             self.y += self.vy/10
@@ -226,7 +220,6 @@ class Player:
         mouseState = pygame.mouse.get_pressed()[0]
 
         # wheel for zoom
-        print(self.zoom)
 
 
         if(mouseState and not self.oldMouseState):
@@ -234,7 +227,6 @@ class Player:
         
         if(pygame.mouse.get_pressed()[2] or self.throw):
             self.cursor = [self.x, self.y]
-            print(self.cursor)
         
         if(mouseState):
             pos = pygame.mouse.get_pos()
@@ -265,11 +257,11 @@ imageplanete.scale = 0.1
 images.append(imagelune)
 images.append(imageplanete)
 
-for i in range(500):
+for i in range(PLANET_NUMBER):
     o = Object(random.randint(0, MAP_WIDTH), random.randint(0, MAP_WIDTH), 10)
     o.image = imageplanete
     o.transparent = True
-    for j in range(3):
+    for j in range(random.randint(0, MOON_NUMBER)):
         c = Object(0, 0, 5)
         c.r = 5
         c.m = random.randint(1, 10)
@@ -290,7 +282,6 @@ while True:
                     p.zoom *= (event.y)*0.2 + 1
 
     screen.fill((0, 0, 0))
-
     Object.time()
     for i in images:
         i.update()
