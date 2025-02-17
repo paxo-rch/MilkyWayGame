@@ -33,10 +33,17 @@ class Object:
         self.y = y
         self.m = m
         self.r = m
-
+        self.image = None
+        self.image_scale = 0.05
+        self.transparent = False
         self.parent = None
         self.children = []
-
+    def setImage(self, image):
+        if isinstance(image, str):
+            self.image = pygame.image.load(image)
+        else:
+            self.image = image
+        
     def setParent(self, parent, orbit_radius):
         self.parent = parent
         self.parent.children.append(self)
@@ -46,7 +53,11 @@ class Object:
         self.first_angular_position = random.random() * 2 * math.pi
     
     def draw(self):
-        pygame.draw.circle(screen, (255, 255, 255), (posX(self.x), posY(self.y)), self.r * p.zoom)
+        x,y = posX(self.x), posY(self.y)
+        if self.image is not None:
+            screen.blit(pygame.transform.scale(self.image,(self.image.get_width()*p.zoom*self.image_scale,self.image.get_width()*p.zoom*self.image_scale)),(x-(self.image.get_height()/2)*p.zoom*self.image_scale,y-(self.image.get_width()/2)*p.zoom*self.image_scale))
+        if not self.transparent:
+            pygame.draw.circle(screen, (255, 255, 255), (x, y), self.r * p.zoom)
 
     def drawAll(self):
         self.draw()
@@ -195,16 +206,18 @@ class Player:
         self.oldMouseState = mouseState
         self.oldMousePosition = pygame.mouse.get_pos()
 
-        print(self.cursor)
-
+imageplanete = pygame.image.load("planete1.png")
+imageetoile = pygame.image.load("etoile.jpg")
 for i in range(500):
     o = Object(random.randint(0, MAP_WIDTH), random.randint(0, MAP_WIDTH), 10)
-    
+    #o.setImage("etoile.jpg")
     for j in range(3):
         c = Object(0, 0, 5)
         c.r = 5
         c.m = random.randint(1, 10)
         c.setParent(o,random.randint(50, 200))
+        c.setImage(imageplanete)
+        c.transparent = True
     
     objects.append(o)
 
