@@ -21,6 +21,26 @@ def posX(x):
 def posY(y):
     return SCREEN_HEIGHT//2 + (y - p.cursor[1]) * p.zoom
 
+
+class Image:
+    def __init__(self):
+        self.scale = 0.05
+        self.image = None
+        self.scaled_image = None
+
+    def setImage(self, image):
+        if isinstance(image, str):
+            self.image = pygame.image.load(image)
+            self.scaled_image = pygame.transform.scale(self.image,(self.image.get_width()*p.zoom*self.scale,self.image.get_width()*p.zoom*self.scale))
+        else:
+            self.image = image
+
+
+    def update(self):
+        if self.image is not None:
+            self.scaled_image = pygame.transform.scale(self.image,(self.image.get_width()*p.zoom*self.scale,self.image.get_width()*p.zoom*self.scale))
+
+
 class Object:
     t = 0
 
@@ -33,16 +53,10 @@ class Object:
         self.y = y
         self.m = m
         self.r = m
-        self.image = None
-        self.image_scale = 0.05
         self.transparent = False
         self.parent = None
         self.children = []
-    def setImage(self, image):
-        if isinstance(image, str):
-            self.image = pygame.image.load(image)
-        else:
-            self.image = image
+        self.image = None
         
     def setParent(self, parent, orbit_radius):
         self.parent = parent
@@ -55,7 +69,7 @@ class Object:
     def draw(self):
         x,y = posX(self.x), posY(self.y)
         if self.image is not None:
-            screen.blit(pygame.transform.scale(self.image,(self.image.get_width()*p.zoom*self.image_scale,self.image.get_width()*p.zoom*self.image_scale)),(x-(self.image.get_height()/2)*p.zoom*self.image_scale,y-(self.image.get_width()/2)*p.zoom*self.image_scale))
+            screen.blit(self.image.scaled_image,(x-(self.image.image.get_height()/2)*p.zoom*self.image.scale,y-(self.image.image.get_width()/2)*p.zoom*self.image.scale))
         if not self.transparent:
             pygame.draw.circle(screen, (255, 255, 255), (x, y), self.r * p.zoom)
 
@@ -206,19 +220,27 @@ class Player:
         self.oldMouseState = mouseState
         self.oldMousePosition = pygame.mouse.get_pos()
 
-imageplanete = pygame.image.load("planete1.png")
-imageetoile = pygame.image.load("etoile.jpg")
+
+images = []
+imageplanete = Image()
+imagelune = Image()
+imagelune.setImage(pygame.image.load("lune.png"))
+imageplanete.setImage(pygame.image.load("planete.png"))
+imageplanete.scale = 0.1
+images.append(imagelune)
+images.append(imageplanete)
+
 for i in range(500):
     o = Object(random.randint(0, MAP_WIDTH), random.randint(0, MAP_WIDTH), 10)
-    #o.setImage("etoile.jpg")
+    o.image = imageplanete
+    o.transparent = True
     for j in range(3):
         c = Object(0, 0, 5)
         c.r = 5
         c.m = random.randint(1, 10)
         c.setParent(o,random.randint(50, 200))
-        c.setImage(imageplanete)
         c.transparent = True
-    
+        c.image = imagelune
     objects.append(o)
 
 p = Player(objects[0])
@@ -229,15 +251,18 @@ while True:
             pygame.quit()
             quit()
         if event.type == pygame.MOUSEWHEEL:
-            p.zoom *= (event.y)*0.2 + 1
+                if p.zoom* ((event.y*0.2) +1) < 6 and p.zoom* ((event.y*0.2) +1) > 0.1:
+                    p.zoom *= (event.y)*0.2 + 1
 
     screen.fill((0, 0, 0))
 
     Object.time()
+    for i in images:
+        i.update()
     for i in objects:
         i.updateAll()
         i.drawAll()
-
+    
     p.update()
     p.draw()
 
