@@ -1,123 +1,232 @@
-from ursina import *
-from ursina.shaders import lit_with_shadows_shader
-from ursina.prefabs.slider import Slider
-
+import pygame
+import math
 import random
-from math import *
+import time
 
-time_speed = 1 # secondes (r) par seconde (g)
-time_rate = 1 * time_speed # (250000000*365*24*3600*10000) * time_speed
-base_time = time.time()
-time_count = 0
+G = 1
 
-scale = 100 / 5e20
+MAP_SCALE = 10
+MAP_WIDTH = 1080 * MAP_SCALE
+MAP_HEIGHT = 1080 * MAP_SCALE
+SCREEN_WIDTH = 1920
+SCREEN_HEIGHT = 1080
 
-e = Entity(model='sphere', color=color.red, scale=1, shader=lit_with_shadows_shader)
+pygame.init()
+screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
+objects = []
 
-class BlackHole(Entity):
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
-        self.velocity = Vec3(0, 0, 0)
-        self.blackhole_gravity = 1.9884e30
-        self.update_number = 0
-        self.update_rate = 1
-    def update(self):
-        global time_count, base_time
-        time_rate = 1 * time_speed
-        time_count += time.dt*time_rate
-        #print(time_count)
+def posX(x):
+    return x * p.zoom - p.cursor[0]
 
-class Star(Entity):
-    def __init__(self, **kwargs):
-        super().__init__(model='sphere', color=color.red, shader = lit_with_shadows_shader)
-        self.velocity = Vec3(0, 0, 0)
-        self.update_number = 0
-        self.update_rate = 1
-        self.initial_angle = 0
-        self.orbit_radius = 0
-        self.angular_velocity = 0
+def posY(y):
+    return y * p.zoom - p.cursor[1]
+
+class Object:
+    t = 0
+
+    def time():
+        Object.t = time.time()*1
+        #print(t)
+
+    def __init__(self, x, y, m):
+        self.x = x
+        self.y = y
+        self.m = m
+        self.r = m
+
+        self.parent = None
+        self.children = []
+
+    def setParent(self, parent, orbit_radius):
+        self.parent = parent
+        self.parent.children.append(self)
+
+        self.orbit_radius = orbit_radius
+        self.angular_velocity = 1 # math.sqrt(G * 1 / self.orbit_radius) * 2 * math.pi
+        self.first_angular_position = random.random() * 2 * math.pi
+    
+    def draw(self):
+        pygame.draw.circle(screen, (255, 255, 255), (self.x * p.zoom - p.cursor[0], self.y * p.zoom - p.cursor[1]), self.r * p.zoom)
+
+    def drawAll(self):
+        self.draw()
+        for i in self.children:
+            i.drawAll()
+
+    def getAbsoluteX(self):
+        if self.parent is None:
+            return self.x
+        else:
+            return self.parent.getAbsoluteX() + self.x
         
+    def getAbsoluteY(self):
+        if self.parent is None:
+            return self.y
+        else:
+            return self.parent.getAbsoluteY() + self.y
+
+    def updateAll(self):
+        self.update()
+
+        for i in self.children:
+            i.updateAll()
+
     def update(self):
-        self.x = self.orbit_radius * scale * cos(self.initial_angle + self.angular_velocity * time_count)
-        self.z = self.orbit_radius * scale * sin(self.initial_angle + self.angular_velocity * time_count)
+        if(self.parent is not None):
+            self.x = self.parent.getAbsoluteX() + self.orbit_radius * math.cos(self.first_angular_position + self.angular_velocity * Object.t)
+            self.y = self.parent.getAbsoluteY() + self.orbit_radius * math.sin(self.first_angular_position + self.angular_velocity * Object.t)
 
-app = Ursina()
+class Player:
+    def __init__(self, planet):
+        self.planet = planet
+        self.x = planet.getAbsoluteX()
+        self.y = planet.getAbsoluteY()
+        self.vx = 0
+        self.vy = 0
+        self.angle = 0
+        self.force = 100
+        self.projection_length = 100
+        self.throw = False
 
-sky = Sky(texture='space.hdr')
+        self.oldMouseState = False
+        self.oldMousePosition = [0,0]
 
-points = []
-numstars = 10000
-
-center = BlackHole(model='sphere', color=color.black, scale=0.01)
-
-for i in range (numstars):
-    point = Star(model='sphere', color=color.red, scale=1, shader=lit_with_shadows_shader)
-    #1 unitée = 100 parsecs = 326 années lumière
-
-    rm = 5e20 # en m
-    r = random.uniform(rm/20,rm)
-    v = sqrt(center.blackhole_gravity * 6.674e-11 / r) * 100000
-    a = random.uniform(0, 2 * pi)
+        self.cursor = [MAP_WIDTH/2, MAP_HEIGHT/2]
+        self.zoom = 1
     
-    point.angular_velocity = v / r
-    print(point.angular_velocity)
-    point.orbit_radius = r
-    point.initial_angle = a
-    
-    point.position = Vec3(0, 1 / (1 + exp((r * scale)/50*3 - 3))*random.uniform(-20, 20), 0)
-    
-    points.append(point)
-    
+    def draw(self):
+        pygame.draw.circle(screen, (255, 0, 0), (self.x * p.zoom - p.cursor[0], self.y * p.zoom - p.cursor[1]), 10)
 
+        pygame.draw.line(screen, (255, 255, 255), (self.x * p.zoom - p.cursor[0], self.y * p.zoom - p.cursor[1]), (self.x * p.zoom + math.cos(self.angle) * self.projection_length - p.cursor[0], self.y * p.zoom + math.sin(self.angle) * self.projection_length - p.cursor[1]))
 
-
-def convert_seconds(seconds):
-    units = [
-        (1, "seconde"),
-        (60, "minute"),
-        (3600, "heure"),
-        (86400, "jour"),
-        (31536000, "année"),
-        (31536000000, "millénaire"),
-        (31536000000000, "million d'année"),
-        (31536000000000000, "milliard d'année")
-    ]
-    
-    result = []
-    for factor, unit in reversed(units):
-        value = seconds // factor
-        if value > 0:
-            result.append(f"{int(value)} {unit}{'s' if value > 1 else ''}")
-            seconds %= factor
-    
-    return ", ".join(result) if result else "0 seconde"
-
-thin_slider = ThinSlider(text='', dynamic=True)
-
-thin_slider.label.origin = (0,0)
-thin_slider.label.position = (.25, -.1)
-
-def up_logarithm():
-    global time_speed
-    thin_slider.label.text = "1s = " + str(10 ** (thin_slider.value*15)) + "s"
-    time_speed = (10 ** (thin_slider.value*15))
-
-up_logarithm()
-thin_slider.on_value_changed = up_logarithm
-
-label = Text(text='Time: 0 seconde', position=(-.75, -.45), origin=(0,0), align='left')
-
-def update():
-    global time_count, base_time, label
-    
-    label.text = f'Time: {convert_seconds(time_count)}'
-
-EditorCamera()
-
-class Player(Entity):
     def update(self):
-        self.direction = Vec3(
-            self.forward * (held_keys['z'] - held_keys['s']) + self.right * (held_keys['d'] - held_keys['q']) + self.up * (held_keys['space'] - held_keys['shift'])
-        ).normalized()
+        keys = pygame.key.get_pressed()
+        if(not self.throw):
+            if keys[pygame.K_RIGHT]:
+                self.angle += 4 * math.pi / 360
+            if keys[pygame.K_LEFT]:
+                self.angle -= 4 * math.pi / 360
+        else:
+            for i in objects:
+                if(i != self.planet):
+                    dist = math.sqrt((i.getAbsoluteX() - self.x)**2 + (i.getAbsoluteY() - self.y)**2)
+                    
+                    if(dist < 30):
+                        self.x = i.getAbsoluteX()
+                        self.y = i.getAbsoluteY()
+                        self.vx = 0
+                        self.vy = 0
+                        self.throw = False
+                        self.planet = i
 
-app.run()
+                    if(dist != 0):
+                        dx = (i.getAbsoluteX() - self.x)
+                        dy = (i.getAbsoluteY() - self.y)
+
+                        angle = math.atan2(dy, dx)
+
+                        a = 20000 * G / (dist**2)   # from F=ma and G=m1m2/r^2 as self.m = 1kg
+
+
+                        self.vx += math.cos(angle) * a
+                        self.vy += math.sin(angle) * a
+
+            if(self.x > MAP_WIDTH):
+                self.x = MAP_WIDTH
+                self.vx = - abs(self.vx * 0.5)
+            if(self.x < 0):
+                self.x = 0
+                self.vx = abs(self.vx * 0.5)
+            if(self.y > MAP_HEIGHT):
+                self.y = MAP_HEIGHT
+                self.vy = - abs(self.vy * 0.5)
+            if(self.y < 0):
+                self.y = 0
+                self.vy = abs(self.vy * 0.5)
+
+            if keys[pygame.K_RIGHT]:
+                self.vx += 0.2 * 10
+            if keys[pygame.K_LEFT]:
+                self.vx -= 0.2 * 10
+            if keys[pygame.K_UP]:
+                self.vy -= 0.2 * 10
+            if keys[pygame.K_DOWN]:
+                self.vy += 0.2 * 10
+            
+
+            self.x += self.vx/10
+            self.y += self.vy/10
+
+        if(not self.throw):
+            if keys[pygame.K_SPACE]:
+                self.throw = True
+                self.vx = self.force * math.cos(self.angle)
+                self.vy = self.force * math.sin(self.angle)
+        
+        mouseState = pygame.mouse.get_pressed()[0]
+
+        # wheel for zoom
+        print(self.zoom)
+
+
+        if(mouseState and not self.oldMouseState):
+            self.oldMousePosition = pygame.mouse.get_pos()
+        
+        if(pygame.mouse.get_pressed()[2] or self.throw):
+            self.cursor = [self.x - SCREEN_WIDTH/2, self.y - SCREEN_HEIGHT/2]
+            print(self.cursor)
+        
+        if(mouseState):
+            pos = pygame.mouse.get_pos()
+            self.cursor[0] -= pos[0] - self.oldMousePosition[0]
+            self.cursor[1] -= pos[1] - self.oldMousePosition[1]
+
+            if(self.cursor[0] < 0):
+                self.cursor[0] = 0
+            if(self.cursor[0] > MAP_WIDTH - SCREEN_WIDTH):
+                self.cursor[0] = MAP_WIDTH - SCREEN_WIDTH
+            if(self.cursor[1] < 0):
+                self.cursor[1] = 0
+            if(self.cursor[1] > MAP_HEIGHT - SCREEN_HEIGHT):
+                self.cursor[1] = MAP_HEIGHT - SCREEN_HEIGHT
+        else:
+            self.oldMousePosition = pygame.mouse.get_pos()
+        
+        self.oldMouseState = mouseState
+        self.oldMousePosition = pygame.mouse.get_pos()
+
+        print(self.cursor)
+
+for i in range(500):
+    o = Object(random.randint(0, MAP_WIDTH), random.randint(0, MAP_WIDTH), 10)
+    
+    for j in range(3):
+        c = Object(0, 0, 5)
+        c.r = 5
+        c.m = random.randint(1, 10)
+        c.setParent(o,random.randint(50, 200))
+    
+    objects.append(o)
+
+p = Player(objects[0])
+
+while True:
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            pygame.quit()
+            quit()
+        if event.type == pygame.MOUSEWHEEL:
+            p.zoom /= (event.y)*0.2 + 1
+
+    screen.fill((0, 0, 0))
+
+    Object.time()
+    for i in objects:
+        i.updateAll()
+        i.drawAll()
+
+    p.update()
+    p.draw()
+
+    pygame.display.update()
+    pygame.time.Clock().tick(60)
