@@ -16,10 +16,10 @@ screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
 objects = []
 
 def posX(x):
-    return x * p.zoom - p.cursor[0]
+    return SCREEN_WIDTH//2 + (x - p.cursor[0]) * p.zoom
 
 def posY(y):
-    return y * p.zoom - p.cursor[1]
+    return SCREEN_HEIGHT//2 + (y - p.cursor[1]) * p.zoom
 
 class Object:
     t = 0
@@ -46,7 +46,7 @@ class Object:
         self.first_angular_position = random.random() * 2 * math.pi
     
     def draw(self):
-        pygame.draw.circle(screen, (255, 255, 255), (self.x * p.zoom - p.cursor[0], self.y * p.zoom - p.cursor[1]), self.r * p.zoom)
+        pygame.draw.circle(screen, (255, 255, 255), (posX(self.x), posY(self.y)), self.r * p.zoom)
 
     def drawAll(self):
         self.draw()
@@ -95,9 +95,9 @@ class Player:
         self.zoom = 1
     
     def draw(self):
-        pygame.draw.circle(screen, (255, 0, 0), (self.x * p.zoom - p.cursor[0], self.y * p.zoom - p.cursor[1]), 10)
+        pygame.draw.circle(screen, (255, 0, 0), (posX(self.x), posY(self.y)), 10 * p.zoom)
 
-        pygame.draw.line(screen, (255, 255, 255), (self.x * p.zoom - p.cursor[0], self.y * p.zoom - p.cursor[1]), (self.x * p.zoom + math.cos(self.angle) * self.projection_length - p.cursor[0], self.y * p.zoom + math.sin(self.angle) * self.projection_length - p.cursor[1]))
+        pygame.draw.line(screen, (255, 255, 255), (posX(self.x), posY(self.y)), (posX(self.x + math.cos(self.angle) * self.projection_length), posY(self.y + math.sin(self.angle) * self.projection_length)))
 
     def update(self):
         keys = pygame.key.get_pressed()
@@ -173,13 +173,13 @@ class Player:
             self.oldMousePosition = pygame.mouse.get_pos()
         
         if(pygame.mouse.get_pressed()[2] or self.throw):
-            self.cursor = [self.x - SCREEN_WIDTH/2, self.y - SCREEN_HEIGHT/2]
+            self.cursor = [self.x, self.y]
             print(self.cursor)
         
         if(mouseState):
             pos = pygame.mouse.get_pos()
-            self.cursor[0] -= pos[0] - self.oldMousePosition[0]
-            self.cursor[1] -= pos[1] - self.oldMousePosition[1]
+            self.cursor[0] -= (pos[0] - self.oldMousePosition[0]) / self.zoom
+            self.cursor[1] -= (pos[1] - self.oldMousePosition[1]) / self.zoom
 
             if(self.cursor[0] < 0):
                 self.cursor[0] = 0
@@ -216,7 +216,7 @@ while True:
             pygame.quit()
             quit()
         if event.type == pygame.MOUSEWHEEL:
-            p.zoom /= (event.y)*0.2 + 1
+            p.zoom *= (event.y)*0.2 + 1
 
     screen.fill((0, 0, 0))
 
