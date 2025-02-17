@@ -2,6 +2,7 @@ import pygame
 import math
 import random
 import time
+import imageio
 
 G = 1
 
@@ -56,14 +57,19 @@ class Object:
         self.transparent = False
         self.parent = None
         self.children = []
-        self.image = None
+
+    def setImage(self, image):
+        if isinstance(image, str):
+            self.image = pygame.image.load(image)
+        else:
+            self.image = image
         
     def setParent(self, parent, orbit_radius):
         self.parent = parent
         self.parent.children.append(self)
 
         self.orbit_radius = orbit_radius
-        self.angular_velocity = 1 # math.sqrt(G * 1 / self.orbit_radius) * 2 * math.pi
+        self.angular_velocity = math.sqrt(G * 1 / self.orbit_radius) * 2 * math.pi
         self.first_angular_position = random.random() * 2 * math.pi
     
     def draw(self):
@@ -113,6 +119,15 @@ class Player:
         self.projection_length = 100
         self.throw = False
 
+        self.icon_rocket = pygame.image.load("rocket.png")
+
+        self.flame_animation = []
+        self.i = 0
+
+        # read the gif file
+        for f in range(1, 29):
+            self.flame_animation.append(pygame.image.load(f"flame_gif/{f}.gif"))
+
         self.oldMouseState = False
         self.oldMousePosition = [0,0]
 
@@ -120,9 +135,29 @@ class Player:
         self.zoom = 1
     
     def draw(self):
-        pygame.draw.circle(screen, (255, 0, 0), (posX(self.x), posY(self.y)), 10 * p.zoom)
+        #pygame.draw.circle(screen, (255, 0, 0), (posX(self.x), posY(self.y)), 10 * p.zoom)
+        if(not self.throw):
+            a_mvt = self.angle
+        else:
+            a_mvt = math.atan2(self.vy, self.vx)
+            self.angle = a_mvt
 
-        pygame.draw.line(screen, (255, 255, 255), (posX(self.x), posY(self.y)), (posX(self.x + math.cos(self.angle) * self.projection_length), posY(self.y + math.sin(self.angle) * self.projection_length)))
+        self.i = (self.i+1) % len(self.flame_animation)
+
+        sprite_size = (int(self.icon_rocket.get_width()*p.zoom*0.05), int(self.icon_rocket.get_height()*p.zoom*0.05))
+        sprite_surface = pygame.Surface(sprite_size, pygame.SRCALPHA)
+        rocket_scaled = pygame.transform.scale(self.icon_rocket, sprite_size)
+        sprite_surface.blit(rocket_scaled, (0, 0))
+        
+        if(self.throw):
+            flame_scaled = pygame.transform.scale(self.flame_animation[self.i], [sprite_size[0]/5, sprite_size[1]/3])
+            sprite_surface.blit(flame_scaled, (sprite_size[0]*0.4, sprite_size[0]*0.7))
+            
+        rotated_sprite = pygame.transform.rotate(sprite_surface, -90 - math.degrees(a_mvt))
+        screen.blit(rotated_sprite, (posX(self.x)-rotated_sprite.get_width()//2, posY(self.y)-rotated_sprite.get_height()//2))
+
+        if(not self.throw):
+            pygame.draw.line(screen, (255, 255, 255), (posX(self.x), posY(self.y)), (posX(self.x + math.cos(self.angle) * self.projection_length), posY(self.y + math.sin(self.angle) * self.projection_length)))
 
     def update(self):
         keys = pygame.key.get_pressed()
