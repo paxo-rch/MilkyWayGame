@@ -15,9 +15,9 @@ SCREEN_HEIGHT = 1080
 PLANET_NUMBER = 500
 MOON_NUMBER = 5
 
-ROCKET_SPEED = 1
-ROCKET_TURN_SPEED = 16
-ROCKET_THROW_SPEED = 100
+
+
+
 pygame.init()
 screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
 objects = []
@@ -28,24 +28,43 @@ def posX(x):
 def posY(y):
     return SCREEN_HEIGHT//2 + (y - p.cursor[1]) * p.zoom
 
-class Image:
-    def __init__(self):
-        self.scale = 0.05
-        self.image = None
-        self.scaled_image = None
-
-    def setImage(self, image):
-        if isinstance(image, str):
-            self.image = pygame.image.load(image)
-            
+class Text:
+    def __init__(self, text, x, y, size, relative=True, color=(255,255,255)):
+        self.font = pygame.font.SysFont(None, size)
+        self.text = text
+        self.color = color
+        self.render = self.font.render(self.text, True,pygame.Color(color[0],color[1],color[2]))
+        self.x = x
+        self.y = y
+        self.size = size
+        self.relative = relative
+        textlist.append(self)
+    def update(self):
+        if self.relative:
+            screen.blit(self.render, (posX(self.x)*p.zoom, posY(self.y)*p.zoom))
         else:
-            self.image = image
+            screen.blit(self.render, (self.x, self.y))
+    def setText(self, text):
+        if self.text != text:
+            self.text = text
+            self.render = self.font.render(self.text, True,pygame.Color(self.color[0],self.color[1],self.color[2]))
+    def remove(self):
+        textlist.remove(self)
+        
+        
 
+class Image:
+    def __init__(self,image):
+        self.scale = 0.05
+        self.image = image
+        self.scaled_image = None
+        imagelist.append(self)
 
     def update(self):
         if self.image is not None:
             self.scaled_image = pygame.transform.scale(self.image,(self.image.get_width()*p.zoom*self.scale,self.image.get_height()*p.zoom*self.scale))
-
+    def remove(self):
+        imagelist.remove(self)
 
 class Object:
     t = 0
@@ -114,11 +133,18 @@ class Player:
         self.vx = 0
         self.vy = 0
         self.angle = 0
-        self.force = ROCKET_THROW_SPEED
+        self.speed = 2
+        self.turn_speed = 16
+        self.throw_speed = 100
+        self.fuel = 100
+        self.fuel_consumption = 0.1
+        self.fuel_consumption_throw = 10
         self.projection_length = 100
         self.throw = False
         self.thrust = False
-
+        self.landing_count = 1
+        self.distance = 0
+        self.score = 0
         self.icon_rocket = pygame.image.load("rocket.png")
 
         self.flame_animation = []
@@ -160,9 +186,9 @@ class Player:
     def update(self):
         keys = pygame.key.get_pressed()
         if keys[pygame.K_RIGHT]:
-                self.angle += ROCKET_TURN_SPEED * math.pi / 360
+                self.angle += self.turn_speed * math.pi / 360
         elif keys[pygame.K_LEFT]:
-                self.angle -= ROCKET_TURN_SPEED * math.pi / 360
+                self.angle -= self.turn_speed * math.pi / 360
         if self.throw:
             for i in objects:
                 if(i != self.planet):
@@ -176,7 +202,7 @@ class Player:
                         self.throw = False
                         self.planet = i
 
-                    if(dist != 0):
+                    elif(dist != 0):
                         dx = (i.getAbsoluteX() - self.x)
                         dy = (i.getAbsoluteY() - self.y)
 
@@ -201,21 +227,24 @@ class Player:
                 self.y = 0
                 self.vy = abs(self.vy * 0.5)
 
-            if keys[pygame.K_SPACE]:
+            if keys[pygame.K_SPACE] and self.fuel > self.fuel_consumption:
                 self.thrust = True
-                self.vx += math.cos(self.angle) * ROCKET_SPEED
-                self.vy += math.sin(self.angle) * ROCKET_SPEED
+                self.fuel -= self.fuel_consumption
+                self.vx += math.cos(self.angle) * self.speed
+                self.vy += math.sin(self.angle) * self.speed
             else:
                 self.thrust = False
 
             self.x += self.vx/10
             self.y += self.vy/10
-
+            self.distance += math.sqrt((self.vx/10)**2 + (self.vy/10)**2)
         if(not self.throw):
-            if keys[pygame.K_SPACE]:
+            if keys[pygame.K_SPACE] and self.fuel > self.fuel_consumption_throw:
                 self.throw = True
-                self.vx = self.force * math.cos(self.angle)
-                self.vy = self.force * math.sin(self.angle)
+                self.landing_count += 1 
+                self.fuel -= self.fuel_consumption_throw
+                self.vx = self.throw_speed * math.cos(self.angle)
+                self.vy = self.throw_speed * math.sin(self.angle)
         
         mouseState = pygame.mouse.get_pressed()[0]
 
@@ -246,17 +275,17 @@ class Player:
         
         self.oldMouseState = mouseState
         self.oldMousePosition = pygame.mouse.get_pos()
+        self.score = round(self.distance/self.landing_count)
 
 
-images = []
-imageplanete = Image()
-imagelune = Image()
-imagelune.setImage(pygame.image.load("lune.png"))
-imageplanete.setImage(pygame.image.load("planete.png"))
-imageplanete.scale = 0.1
-images.append(imagelune)
-images.append(imageplanete)
+imagelist = []
+textlist = []
 
+imageplanete = Image(pygame.image.load("planete.png"))
+imagelune = Image(pygame.image.load("lune.png"))
+
+mytext = Text("Fuel: ", SCREEN_WIDTH*0.05, SCREEN_HEIGHT*0.9, 50, relative=False, color=(255,255,255))
+score = Text("Score: ", SCREEN_WIDTH*0.05, SCREEN_HEIGHT*0.05, 50, relative=False, color=(255,255,255))
 for i in range(PLANET_NUMBER):
     o = Object(random.randint(0, MAP_WIDTH), random.randint(0, MAP_WIDTH), 10)
     o.image = imageplanete
@@ -283,14 +312,16 @@ while True:
 
     screen.fill((0, 0, 0))
     Object.time()
-    for i in images:
+    for i in imagelist:
         i.update()
     for i in objects:
         i.updateAll()
         i.drawAll()
-    
+    for i in textlist:
+        i.update()
+    mytext.setText("Fuel: " + str(round(p.fuel,1)))
+    score.setText("Score: " + str(p.score))
     p.update()
     p.draw()
-
     pygame.display.update()
     pygame.time.Clock().tick(60)
