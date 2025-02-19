@@ -11,11 +11,12 @@ def session(conn):
         map = objects
     else:
         conn.send("0".encode("utf-8"))
-    client_list[conn] = (0,0)
+    client_list[conn] = (0,0,0,False)
     while True:
         coordinates = conn.recv(1024).decode("utf-8")
         coordinates = eval(coordinates)
         client_list[conn] = coordinates
+        conn.send(str(client_list).encode("utf-8"))
         
 def listener():
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
