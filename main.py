@@ -2,7 +2,9 @@ import pygame
 import math
 import random
 import time
-import imageio
+import threading
+import time
+import socket
 
 G = 1
 
@@ -21,7 +23,10 @@ MOON_NUMBER = 5
 pygame.init()
 screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
 objects = []
-
+def connect():
+    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    s.connect(("127.0.0.1", 986))
+    return s
 def posX(x):
     return SCREEN_WIDTH//2 + (x - p.cursor[0]) * p.zoom
 
@@ -54,8 +59,8 @@ class Text:
         
 
 class Image:
-    def __init__(self,image):
-        self.scale = 0.05
+    def __init__(self,image,scale=0.05):
+        self.scale = scale
         self.image = image
         self.scaled_image = None
         imagelist.append(self)
@@ -133,7 +138,7 @@ class Player:
         self.vx = 0
         self.vy = 0
         self.angle = 0
-        self.speed = 2
+        self.speed = 1
         self.turn_speed = 16
         self.throw_speed = 100
         self.fuel = 100
@@ -277,30 +282,88 @@ class Player:
         self.oldMousePosition = pygame.mouse.get_pos()
         self.score = round(self.distance/self.landing_count)
 
+class OtherPlayer:
+    def __init__(self):
+        self.x = 0
+        self.y = 0
+        self.id = 0
+        self.thrust = False
+        self.angle = 0
+        self.icon_rocket = pygame.image.load("rocket.png")
+        self.flame_animation = []
+        self.i = 0
 
+        # read the gif file
+        for f in range(1, 29):
+            self.flame_animation.append(pygame.image.load(f"flame_gif/{f}.gif"))
+        otherplayerlist.append(self)
+    def draw(self):
+        a_mvt = self.angle
+
+
+        self.i = (self.i+1) % len(self.flame_animation)
+
+        sprite_size = (int(self.icon_rocket.get_width()*p.zoom*0.05), int(self.icon_rocket.get_height()*p.zoom*0.05))
+        sprite_surface = pygame.Surface(sprite_size, pygame.SRCALPHA)
+        rocket_scaled = pygame.transform.scale(self.icon_rocket, sprite_size)
+        sprite_surface.blit(rocket_scaled, (0, 0))
+        
+        if(self.thrust):
+            flame_scaled = pygame.transform.scale(self.flame_animation[self.i], [sprite_size[0]/5, sprite_size[1]/3])
+            sprite_surface.blit(flame_scaled, (sprite_size[0]*0.4, sprite_size[0]*0.7))
+            
+        rotated_sprite = pygame.transform.rotate(sprite_surface, -90 - math.degrees(a_mvt))
+        screen.blit(rotated_sprite, (posX(self.x)-rotated_sprite.get_width()//2, posY(self.y)-rotated_sprite.get_height()//2))
 imagelist = []
 textlist = []
-
-imageplanete = Image(pygame.image.load("planete.png"))
+otherplayerlist = []
+imageplanete = Image(pygame.image.load("planete.png"),scale=0.1)
 imagelune = Image(pygame.image.load("lune.png"))
+server = 0
+if server == 1:
+    s = connect()
+    mode = s.recv(1024).decode("utf-8")
+    if mode == "1":
+        mytext = Text("Fuel: ", SCREEN_WIDTH*0.05, SCREEN_HEIGHT*0.9, 50, relative=False, color=(255,255,255))
+        score = Text("Score: ", SCREEN_WIDTH*0.05, SCREEN_HEIGHT*0.05, 50, relative=False, color=(255,255,255))
+        for i in range(PLANET_NUMBER):
+            o = Object(random.randint(0, MAP_WIDTH), random.randint(0, MAP_WIDTH), 10)
+            o.image = imageplanete
+            o.transparent = True
+            for j in range(random.randint(0, MOON_NUMBER)):
+                c = Object(0, 0, 5)
+                c.r = 5
+                c.m = random.randint(1, 10)
+                c.setParent(o,random.randint(50, 200))
+                c.transparent = True
+                c.image = imagelune
+            objects.append(o)
+        coords = []
+        for i in objects:
+            child = []
+            for j in i.children:
+                child.append(j.orbit_radius)
+            coords.append((i.x, i.y,child))
+        s.send(str(coords).encode("utf-8"))
+else:
+        mytext = Text("Fuel: ", SCREEN_WIDTH*0.05, SCREEN_HEIGHT*0.9, 50, relative=False, color=(255,255,255))
+        score = Text("Score: ", SCREEN_WIDTH*0.05, SCREEN_HEIGHT*0.05, 50, relative=False, color=(255,255,255))
+        for i in range(PLANET_NUMBER):
+            o = Object(random.randint(0, MAP_WIDTH), random.randint(0, MAP_WIDTH), 10)
+            o.image = imageplanete
+            o.transparent = True
+            for j in range(random.randint(0, MOON_NUMBER)):
+                c = Object(0, 0, 5)
+                c.r = 5
+                c.m = random.randint(1, 10)
+                c.setParent(o,random.randint(50, 200))
+                c.transparent = True
+                c.image = imagelune
+            objects.append(o)
 
-mytext = Text("Fuel: ", SCREEN_WIDTH*0.05, SCREEN_HEIGHT*0.9, 50, relative=False, color=(255,255,255))
-score = Text("Score: ", SCREEN_WIDTH*0.05, SCREEN_HEIGHT*0.05, 50, relative=False, color=(255,255,255))
-for i in range(PLANET_NUMBER):
-    o = Object(random.randint(0, MAP_WIDTH), random.randint(0, MAP_WIDTH), 10)
-    o.image = imageplanete
-    o.transparent = True
-    for j in range(random.randint(0, MOON_NUMBER)):
-        c = Object(0, 0, 5)
-        c.r = 5
-        c.m = random.randint(1, 10)
-        c.setParent(o,random.randint(50, 200))
-        c.transparent = True
-        c.image = imagelune
-    objects.append(o)
 
 p = Player(objects[0])
-
+n = OtherPlayer()
 while True:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
@@ -319,6 +382,8 @@ while True:
         i.drawAll()
     for i in textlist:
         i.update()
+    for i in otherplayerlist:
+        i.draw()
     mytext.setText("Fuel: " + str(round(p.fuel,1)))
     score.setText("Score: " + str(p.score))
     p.update()
