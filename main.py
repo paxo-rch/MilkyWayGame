@@ -151,6 +151,7 @@ class Player:
         self.distance = 0
         self.pathdraw = {}
         self.path = True
+        self.path_step = 1
         self.clean_path = True
         self.show_accessible_planets = True
         self.accessible_planets = []
@@ -286,9 +287,8 @@ class Player:
             self.cursor = [self.x, self.y]
         if pygame.mouse.get_pressed()[0] and not self.throw and not self.calculating and self.show_accessible_planets and len(self.accessible_planets) != 0:
             for i in self.accessible_planets:
-                if math.sqrt((self.cursor[0] - i[0].getAbsoluteX())**2 + (self.cursor[1] - i[0].getAbsoluteY())**2) < 100*p.zoom :
+                if math.sqrt((self.oldMousePosition[0] - posX(i[0].x))**2 + (self.oldMousePosition[1] - posY(i[0].y))**2) < 30:
                     self.angle = i[1]
-                    print(self.angle)
 
         if(mouseState):
             pos = pygame.mouse.get_pos()
@@ -340,6 +340,7 @@ class Player:
                     distance_list.append(rsult[1])
                     angle_list.append(rsult[0])
                     liste_sonde.remove(i)
+        print(len(self.accessible_planets))
 
         if self.clean_path and self.path:
             for i in self.pathdraw.keys():
@@ -465,8 +466,9 @@ while True:
         i.update()
 
     for i in p.pathdraw.keys():
-        for j in range(len(p.pathdraw[i])-2):
-            pygame.draw.line(screen, (255, 255, 255), (posX(p.pathdraw[i][j][0]), posY(p.pathdraw[i][j][1])), (posX(p.pathdraw[i][j+1][0]), posY(p.pathdraw[i][j+1][1])))
+        for j in range(0,(len(p.pathdraw[i])-(1+p.path_step)),p.path_step):
+            if len(p.pathdraw[i])-(1+p.path_step) > j+p.path_step:
+                pygame.draw.line(screen, (255, 255, 255), (posX(p.pathdraw[i][j][0]), posY(p.pathdraw[i][j][1])), (posX(p.pathdraw[i][j+p.path_step][0]), posY(p.pathdraw[i][j+p.path_step][1])))
 
     for i in p.accessible_planets:
         pygame.draw.circle(screen, (0, 255, 0), (posX(i[0].x), posY(i[0].y)), 20 * p.zoom)
