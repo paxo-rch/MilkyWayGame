@@ -268,7 +268,7 @@ class Player:
                 self.traj = Text("Calcul de trajectoire en cours...", SCREEN_HEIGHT/2, SCREEN_WIDTH/2, 100,relative=False, color=(255,255,255))
                 threading.Thread(target=self.Trajectory, args=(p.planet,)).start()
             elif keys[pygame.K_s]:  # TEST ONLY
-                sd = Sondes(objects,1000)
+                sd = Sondes(objects,360)
                 sd.run()
             elif keys[pygame.K_c]:
                 self.accessible_planets = []
@@ -422,7 +422,7 @@ class Sondes:
                 print(self.position_history.shape)
                 for i in range(len(self.pos)):
                     try:
-                        pygame.draw.circle(screen, (255, 255, 255), (posX(self.pos[i][0]), posY(self.pos[i][1])), 1)
+                        pygame.draw.line(screen, (255, 255, 255), (posX(self.position_history[i,0,self.steps-1]), posY(self.position_history[i,1,self.steps-1])), (posX(self.position_history[i,0,self.steps-2]), posY(self.position_history[i,1,self.steps-2])))
                     except:
                         print("error: ",i,0,self.steps-1)
                         exit()
