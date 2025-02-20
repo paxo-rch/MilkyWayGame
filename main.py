@@ -267,6 +267,9 @@ class Player:
                 self.accessible_planets = []
                 self.traj = Text("Calcul de trajectoire en cours...", SCREEN_HEIGHT/2, SCREEN_WIDTH/2, 100,relative=False, color=(255,255,255))
                 threading.Thread(target=self.Trajectory, args=(p.planet,)).start()
+            elif keys[pygame.K_s]:  # TEST ONLY
+                sd = Sondes(objects,1000)
+                sd.run()
             elif keys[pygame.K_c]:
                 self.accessible_planets = []
                 self.pathdraw.clear()
@@ -366,6 +369,70 @@ class Player:
         self.angle = angle_list[distance_list.index(best_distance)]
         textlist.remove(self.traj)
         self.calculating = False
+
+class Sondes:
+    def __init__(self,planets,n):
+        self.n = n
+        
+        self.pos = np.zeros((n,2))   # positions of objects
+        self.pos[:,0] = p.x # set all sondes to player position
+        self.pos[:,1] = p.y
+
+        self.steps = 0
+        self.position_history = np.zeros((n,2,10000))
+
+        self.spe = np.zeros((n,2))   # speed of objects
+        for i in range(n):
+            self.spe[i] = [math.cos(i*2*math.pi/n),math.sin(i*2*math.pi/n)]
+        self.spe *= p.throw_speed
+    
+        self.planet_copy = planets
+        for i in range(len(self.planet_copy)):
+            if(self.planet_copy[i] == p.planet):
+                self.planet_copy = np.delete(self.planet_copy,i)
+                break
+        
+        self.planets = np.zeros((len(self.planet_copy),2))    # positions of planets
+        
+        self.arrivals = np.ones((n))
+        for i in range(len(self.planet_copy)):
+            self.planets[i] = [self.planet_copy[i].x,self.planet_copy[i].y]
+
+    def run(self):
+        while True:
+            diff = self.pos[:, np.newaxis, :] - self.planets[np.newaxis, :, :]
+            dist = np.linalg.norm(diff, axis=-1)    # (n, planets) -> distance
+
+            #print(dist.shape)
+            comp = dist[:,:]<30
+            comp = comp.sum(axis=1)
+            comp = comp[:, np.newaxis]
+
+            self.spe -= G * (diff / dist[:, :, np.newaxis] ** 3).sum(axis=1) * 20000
+            #self.spe *= comp
+            self.pos += self.spe/10
+
+            #print("pos:",self.spe)
+
+            self.position_history[:, :, self.steps] = self.pos
+
+            self.steps += 1
+
+            if(self.steps >= 2):
+                print(self.position_history.shape)
+                for i in range(len(self.pos)):
+                    try:
+                        pygame.draw.circle(screen, (255, 255, 255), (posX(self.pos[i][0]), posY(self.pos[i][1])), 1)
+                    except:
+                        print("error: ",i,0,self.steps-1)
+                        exit()
+
+            #if(comp.sum() == 0):
+            #    break
+
+            pygame.display.update()
+
+        time.sleep(10)
 
 
 
