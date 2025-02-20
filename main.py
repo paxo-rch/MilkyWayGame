@@ -192,6 +192,7 @@ class Player:
             pygame.draw.line(screen, (255, 255, 255), (posX(self.x), posY(self.y)), (posX(self.x + math.cos(self.angle) * self.projection_length), posY(self.y + math.sin(self.angle) * self.projection_length)))
 
     def update(self):
+        start = time.perf_counter()
         keys = pygame.key.get_pressed()
         if keys[pygame.K_RIGHT]:
                 self.angle += self.turn_speed * math.pi / 360
@@ -250,7 +251,7 @@ class Player:
 
         if(not self.throw) and self.calculating == False:
 
-            if keys[pygame.K_SPACE] or keys[pygame.K_RETURN] and self.fuel > self.fuel_consumption_throw:
+            if (keys[pygame.K_SPACE] or keys[pygame.K_RETURN]) and self.fuel > self.fuel_consumption_throw:
                 self.throw = True
                 self.landing_count += 1 
                 self.fuel -= self.fuel_consumption_throw
@@ -316,6 +317,8 @@ class Player:
         if(self.throw or pygame.mouse.get_pressed()[2]):
             self.cursor = [self.x, self.y]
         self.score = round(self.distance)
+        end = time.perf_counter() - start
+        print(end)
 
     def Trajectory(self,planet):
         distance_list = []
@@ -365,6 +368,7 @@ class Player:
         self.calculating = False
 
 
+
 class Sonde:
     def __init__(self,planet,angle):
         self.x = planet.x
@@ -381,6 +385,7 @@ class Sonde:
 
 
     def update(self):
+        start = time.perf_counter()
         if self.throw == False:
                 self.throw = True
                 self.vx = self.throwspeed * math.cos(self.angle)
@@ -424,6 +429,8 @@ class Sonde:
         self.x += self.vx/10
         self.y += self.vy/10
         self.distance += math.sqrt((self.vx/10)**2 + (self.vy/10)**2)
+        end = time.perf_counter() - start
+        print(end)
 
 
 imagelist = []
