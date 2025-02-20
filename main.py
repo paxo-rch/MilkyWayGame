@@ -196,7 +196,6 @@ class Player:
     def update(self):
         start = time.perf_counter()
         keys = pygame.key.get_pressed()
-        mouseState = pygame.mouse.get_pressed()[0]
         if keys[pygame.K_RIGHT]:
                 self.angle += self.turn_speed * math.pi / 360
         elif keys[pygame.K_LEFT]:
@@ -251,6 +250,7 @@ class Player:
             self.y += self.vy/10
             self.distance += math.sqrt((self.vx/10)**2 + (self.vy/10)**2)
 
+
         if(not self.throw) and self.calculating == False:
 
             if (keys[pygame.K_SPACE] or keys[pygame.K_RETURN]) and self.fuel > self.fuel_consumption_throw:
@@ -279,7 +279,7 @@ class Player:
 
 
         
-            
+            mouseState = pygame.mouse.get_pressed()[0]
 
             # wheel for zoom
 
@@ -297,9 +297,8 @@ class Player:
                                 self.angle = j[1]
                                 break
                         break
-            self.oldMouseState = mouseState
-            self.oldMousePosition = pygame.mouse.get_pos()
-        elif not self.throw:
+
+
             if(mouseState):
                 pos = pygame.mouse.get_pos()
                 self.cursor[0] -= (pos[0] - self.oldMousePosition[0]) / self.zoom
@@ -315,6 +314,8 @@ class Player:
                     self.cursor[1] = MAP_HEIGHT - SCREEN_HEIGHT
             else:
                 self.oldMousePosition = pygame.mouse.get_pos()
+            self.oldMouseState = mouseState
+            self.oldMousePosition = pygame.mouse.get_pos()
         if(self.throw or pygame.mouse.get_pressed()[2]):
             self.cursor = [self.x, self.y]
         self.score = round(self.distance)
