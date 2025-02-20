@@ -5,6 +5,7 @@ import time
 import threading
 import time
 import socket
+import numpy as np
 
 G = 1
 
@@ -144,12 +145,13 @@ class Player:
         self.landing_count = 1
         self.distance = 0
         self.pathdraw = {}
-        self.path = False
+        self.path = True
         self.path_step = 1
+        self.path_antialiasing = False
         self.clean_path = True
         self.show_accessible_planets = True
         self.accessible_planets = []
-        self.sonde_number = 90
+        self.sonde_number = 360
         self.map = False
         self.selected_planet = None
         self.score = 0
@@ -194,6 +196,7 @@ class Player:
     def update(self):
         start = time.perf_counter()
         keys = pygame.key.get_pressed()
+        mouseState = pygame.mouse.get_pressed()[0]
         if keys[pygame.K_RIGHT]:
                 self.angle += self.turn_speed * math.pi / 360
         elif keys[pygame.K_LEFT]:
@@ -248,7 +251,6 @@ class Player:
             self.y += self.vy/10
             self.distance += math.sqrt((self.vx/10)**2 + (self.vy/10)**2)
 
-
         if(not self.throw) and self.calculating == False:
 
             if (keys[pygame.K_SPACE] or keys[pygame.K_RETURN]) and self.fuel > self.fuel_consumption_throw:
@@ -277,7 +279,7 @@ class Player:
 
 
         
-            mouseState = pygame.mouse.get_pressed()[0]
+            
 
             # wheel for zoom
 
@@ -295,8 +297,9 @@ class Player:
                                 self.angle = j[1]
                                 break
                         break
-
-
+            self.oldMouseState = mouseState
+            self.oldMousePosition = pygame.mouse.get_pos()
+        elif not self.throw:
             if(mouseState):
                 pos = pygame.mouse.get_pos()
                 self.cursor[0] -= (pos[0] - self.oldMousePosition[0]) / self.zoom
@@ -312,13 +315,10 @@ class Player:
                     self.cursor[1] = MAP_HEIGHT - SCREEN_HEIGHT
             else:
                 self.oldMousePosition = pygame.mouse.get_pos()
-            self.oldMouseState = mouseState
-            self.oldMousePosition = pygame.mouse.get_pos()
         if(self.throw or pygame.mouse.get_pressed()[2]):
             self.cursor = [self.x, self.y]
         self.score = round(self.distance)
         end = time.perf_counter() - start
-        print(end)
 
     def Trajectory(self,planet):
         distance_list = []
@@ -327,7 +327,7 @@ class Player:
         for i in range(0,self.sonde_number):
             sonde = Sonde(planet,i)
             if self.path:
-                self.pathdraw[sonde] = []
+                self.pathdraw[sonde] = [[],[]]
 
             liste_sonde.append(sonde)
 
@@ -335,18 +335,17 @@ class Player:
             for i in liste_sonde:
                 rsult = i.update()
                 if self.path:
-                    self.pathdraw[i].append((i.x, i.y))
+                    self.pathdraw[i][0].append((i.x, i.y))
 
                 if rsult != None:
                     if self.path:
-                        self.pathdraw[i].append((i.planete,rsult[1],rsult[0]))
+                        self.pathdraw[i][1].append((i.planete,rsult[1],rsult[0]))
 
                     if self.show_accessible_planets:
                         for j in self.accessible_planets:
                             if j[0] == i.planete and j[2] > rsult[1]:
                                 self.accessible_planets.remove(j)
                         self.accessible_planets.append((i.planete,rsult[0],rsult[1]))
-
                     distance_list.append(rsult[1])
                     angle_list.append(rsult[0])
                     liste_sonde.remove(i)
@@ -355,12 +354,12 @@ class Player:
             for i in self.pathdraw.keys():
                 for j in self.pathdraw.keys():
                     if i != j and len(self.pathdraw[i]) != 0 and len(self.pathdraw[j]) != 0:
-                        if self.pathdraw[i][-1][0] == self.pathdraw[j][-1][0]:
-                            if self.pathdraw[i][-1][1] < self.pathdraw[j][-1][1]:
-                                self.pathdraw[j] = []
+                        if self.pathdraw[i][1][0][0] == self.pathdraw[j][1][0][0]:
+                            if self.pathdraw[i][1][0][1] < self.pathdraw[j][1][0][1]:
+                                self.pathdraw[j][0] = []
 
                             else:
-                                self.pathdraw[i] = []
+                                self.pathdraw[i][0] = []
 
         best_distance = max(distance_list)
         self.angle = angle_list[distance_list.index(best_distance)]
@@ -430,7 +429,6 @@ class Sonde:
         self.y += self.vy/10
         self.distance += math.sqrt((self.vx/10)**2 + (self.vy/10)**2)
         end = time.perf_counter() - start
-        print(end)
 
 
 imagelist = []
@@ -456,6 +454,7 @@ for i in range(PLANET_NUMBER):
     objects.append(o)
 
 p = Player(objects[0])
+threading.Thread
 while True:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
@@ -483,9 +482,13 @@ while True:
         i.update()
 
     for i in p.pathdraw.keys():
-        for j in range(0,(len(p.pathdraw[i])-(1+p.path_step)),p.path_step):
-            if len(p.pathdraw[i])-(1+p.path_step) > j+p.path_step:
-                pygame.draw.line(screen, (255, 255, 255), (posX(p.pathdraw[i][j][0]), posY(p.pathdraw[i][j][1])), (posX(p.pathdraw[i][j+p.path_step][0]), posY(p.pathdraw[i][j+p.path_step][1])))
+        if p.path_antialiasing:
+                if len(p.pathdraw[i][0]) > 2:
+                    pygame.draw.aalines(screen,(255,255,255),False,p.pathdraw[i][0])
+        else:
+            for j in range(0,(len(p.pathdraw[i][0])-(1+p.path_step)),p.path_step):
+                if len(p.pathdraw[i][0])-(p.path_step) > j+p.path_step:
+                        pygame.draw.line(screen, (255, 255, 255), (posX(p.pathdraw[i][0][j][0]), posY(p.pathdraw[i][0][j][1])), (posX(p.pathdraw[i][0][j+p.path_step][0]), posY(p.pathdraw[i][0][j+p.path_step][1])))
 
     if p.map:    
         for i in p.accessible_planets:
