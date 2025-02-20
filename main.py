@@ -108,16 +108,10 @@ class Object:
             i.drawAll()
 
     def getAbsoluteX(self):
-        if self.parent is None:
-            return self.x
-        else:
-            return self.parent.getAbsoluteX() + self.x
-        
+        return self.x
+
     def getAbsoluteY(self):
-        if self.parent is None:
-            return self.y
-        else:
-            return self.parent.getAbsoluteY() + self.y
+        return self.y
 
     def updateAll(self):
         self.update()
@@ -282,44 +276,46 @@ class Player:
 
 
         
-        mouseState = pygame.mouse.get_pressed()[0]
+            mouseState = pygame.mouse.get_pressed()[0]
 
-        # wheel for zoom
+            # wheel for zoom
 
 
-        if(mouseState and not self.oldMouseState):
+            if(mouseState and not self.oldMouseState):
+                self.oldMousePosition = pygame.mouse.get_pos()
+            
+            
+            if mouseState and not self.throw and not self.calculating:
+                for i in objects:
+                    if  i != self.planet and math.sqrt((self.oldMousePosition[0] - posX(i.x))**2 + (self.oldMousePosition[1] - posY(i.y))**2) < 20:
+                        self.selected_planet = i
+                        for j in self.accessible_planets:    
+                            if j[0] == i:
+                                self.angle = j[1]
+                                break
+                        break
+
+
+            if(mouseState):
+                pos = pygame.mouse.get_pos()
+                self.cursor[0] -= (pos[0] - self.oldMousePosition[0]) / self.zoom
+                self.cursor[1] -= (pos[1] - self.oldMousePosition[1]) / self.zoom
+
+                if(self.cursor[0] < 0):
+                    self.cursor[0] = 0
+                if(self.cursor[0] > MAP_WIDTH - SCREEN_WIDTH):
+                    self.cursor[0] = MAP_WIDTH - SCREEN_WIDTH
+                if(self.cursor[1] < 0):
+                    self.cursor[1] = 0
+                if(self.cursor[1] > MAP_HEIGHT - SCREEN_HEIGHT):
+                    self.cursor[1] = MAP_HEIGHT - SCREEN_HEIGHT
+            else:
+                self.oldMousePosition = pygame.mouse.get_pos()
+            self.oldMouseState = mouseState
             self.oldMousePosition = pygame.mouse.get_pos()
-        
-        if(pygame.mouse.get_pressed()[2] or self.throw):
+        if(self.throw or pygame.mouse.get_pressed()[2]):
             self.cursor = [self.x, self.y]
-        if pygame.mouse.get_pressed()[0] and not self.throw and not self.calculating:
-            for i in objects:
-                if  i != self.planet and math.sqrt((self.oldMousePosition[0] - posX(i.x))**2 + (self.oldMousePosition[1] - posY(i.y))**2) < 20:
-                    self.selected_planet = i
-                    for j in self.accessible_planets:    
-                        if j[0] == i:
-                            self.angle = j[1]
-
-
-        if(mouseState):
-            pos = pygame.mouse.get_pos()
-            self.cursor[0] -= (pos[0] - self.oldMousePosition[0]) / self.zoom
-            self.cursor[1] -= (pos[1] - self.oldMousePosition[1]) / self.zoom
-
-            if(self.cursor[0] < 0):
-                self.cursor[0] = 0
-            if(self.cursor[0] > MAP_WIDTH - SCREEN_WIDTH):
-                self.cursor[0] = MAP_WIDTH - SCREEN_WIDTH
-            if(self.cursor[1] < 0):
-                self.cursor[1] = 0
-            if(self.cursor[1] > MAP_HEIGHT - SCREEN_HEIGHT):
-                self.cursor[1] = MAP_HEIGHT - SCREEN_HEIGHT
-        else:
-            self.oldMousePosition = pygame.mouse.get_pos()
-        self.oldMouseState = mouseState
-        self.oldMousePosition = pygame.mouse.get_pos()
         self.score = round(self.distance)
-
 
     def Trajectory(self,planet):
         distance_list = []
@@ -357,7 +353,7 @@ class Player:
                 for j in self.pathdraw.keys():
                     if i != j and len(self.pathdraw[i]) != 0 and len(self.pathdraw[j]) != 0:
                         if self.pathdraw[i][-1][0] == self.pathdraw[j][-1][0]:
-                            if self.pathdraw[i][-1][1] > self.pathdraw[j][-1][1]:
+                            if self.pathdraw[i][-1][1] < self.pathdraw[j][-1][1]:
                                 self.pathdraw[j] = []
 
                             else:
