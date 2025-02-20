@@ -150,12 +150,14 @@ class Player:
         self.landing_count = 1
         self.distance = 0
         self.pathdraw = {}
-        self.path = True
+        self.path = False
         self.path_step = 1
         self.clean_path = True
         self.show_accessible_planets = True
         self.accessible_planets = []
-        self.sonde_number = 360
+        self.sonde_number = 90
+        self.map = False
+        self.selected_planet = None
         self.score = 0
         self.calculating = False
         self.icon_rocket = pygame.image.load("rocket.png")
@@ -267,11 +269,16 @@ class Player:
                 self.pathdraw.clear()
                 self.accessible_planets = []
                 self.traj = Text("Calcul de trajectoire en cours...", SCREEN_HEIGHT/2, SCREEN_WIDTH/2, 100,relative=False, color=(255,255,255))
-                threading.Thread(target=self.Trajectory, args=()).start()
-            elif keys[pygame.K_DOWN]:
+                threading.Thread(target=self.Trajectory, args=(p.planet,)).start()
+            elif keys[pygame.K_c]:
                 self.accessible_planets = []
                 self.pathdraw.clear()
-                
+            elif keys[pygame.K_m]:
+                self.map = not self.map
+                time.sleep(0.1)
+            elif keys[pygame.K_p]:
+                self.path = not self.path
+                time.sleep(0.1)
 
 
         
@@ -285,10 +292,14 @@ class Player:
         
         if(pygame.mouse.get_pressed()[2] or self.throw):
             self.cursor = [self.x, self.y]
-        if pygame.mouse.get_pressed()[0] and not self.throw and not self.calculating and self.show_accessible_planets and len(self.accessible_planets) != 0:
-            for i in self.accessible_planets:
-                if math.sqrt((self.oldMousePosition[0] - posX(i[0].x))**2 + (self.oldMousePosition[1] - posY(i[0].y))**2) < 30:
-                    self.angle = i[1]
+        if pygame.mouse.get_pressed()[0] and not self.throw and not self.calculating:
+            for i in objects:
+                if  i != self.planet and math.sqrt((self.oldMousePosition[0] - posX(i.x))**2 + (self.oldMousePosition[1] - posY(i.y))**2) < 20:
+                    self.selected_planet = i
+                    for j in self.accessible_planets:    
+                        if j[0] == i:
+                            self.angle = j[1]
+
 
         if(mouseState):
             pos = pygame.mouse.get_pos()
@@ -310,12 +321,12 @@ class Player:
         self.score = round(self.distance)
 
 
-    def Trajectory(self):
+    def Trajectory(self,planet):
         distance_list = []
         angle_list = []
         liste_sonde = []
         for i in range(0,self.sonde_number):
-            sonde = Sonde(i)
+            sonde = Sonde(planet,i)
             if self.path:
                 self.pathdraw[sonde] = []
 
@@ -340,7 +351,6 @@ class Player:
                     distance_list.append(rsult[1])
                     angle_list.append(rsult[0])
                     liste_sonde.remove(i)
-        print(len(self.accessible_planets))
 
         if self.clean_path and self.path:
             for i in self.pathdraw.keys():
@@ -360,16 +370,16 @@ class Player:
 
 
 class Sonde:
-    def __init__(self,angle):
-        self.x = p.x
-        self.y = p.y
-        self.prevx = p.x
-        self.prevy = p.y
+    def __init__(self,planet,angle):
+        self.x = planet.x
+        self.y = planet.y
+        self.prevx = planet.x
+        self.prevy = planet.y
         self.angle = angle * math.pi/(p.sonde_number/2)
         self.throwspeed = p.throw_speed
         self.vx = 0
         self.vy = 0
-        self.planete = p.planet
+        self.planete = planet
         self.throw = False
         self.distance = 0
 
@@ -381,7 +391,7 @@ class Sonde:
                 self.vy = self.throwspeed * math.sin(self.angle)
 
         for i in objects:
-                if(i != p.planet):
+                if(i != self.planete):
                     dist = math.sqrt((i.getAbsoluteX() - self.x)**2 + (i.getAbsoluteY() - self.y)**2)
                     if(dist < 30):
                         self.x = i.getAbsoluteX()
@@ -461,6 +471,10 @@ while True:
     for i in objects:
         i.updateAll()
         i.drawAll()
+        if p.map:
+            pygame.draw.circle(screen, (255, 0, 0), (posX(i.x), posY(i.y)), 20 * p.zoom)
+            if i == p.selected_planet:
+                pygame.draw.circle(screen, (0, 0, 255), (posX(i.x), posY(i.y)), 20 * p.zoom)
 
     for i in textlist:
         i.update()
@@ -470,8 +484,10 @@ while True:
             if len(p.pathdraw[i])-(1+p.path_step) > j+p.path_step:
                 pygame.draw.line(screen, (255, 255, 255), (posX(p.pathdraw[i][j][0]), posY(p.pathdraw[i][j][1])), (posX(p.pathdraw[i][j+p.path_step][0]), posY(p.pathdraw[i][j+p.path_step][1])))
 
-    for i in p.accessible_planets:
-        pygame.draw.circle(screen, (0, 255, 0), (posX(i[0].x), posY(i[0].y)), 20 * p.zoom)
+    if p.map:    
+        for i in p.accessible_planets:
+            if i[0] != p.selected_planet:
+                pygame.draw.circle(screen, (0, 255, 0), (posX(i[0].x), posY(i[0].y)), 20 * p.zoom)
 
     mytext.setText("Fuel: " + str(round(p.fuel,1)))
     score.setText("Score: " + str(p.score))
