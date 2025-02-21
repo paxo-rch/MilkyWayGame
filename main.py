@@ -417,6 +417,20 @@ class Sondes:
 
             self.spe -= G * (diff / dist[:, :, np.newaxis] ** 3).sum(axis=1) * 20000
             self.spe *= comp
+
+            # Check if the sonde is out of the map, if yes, v <- -v/2 (v is spe)
+            mask_right = self.pos[:, 0] > MAP_WIDTH
+            mask_left = self.pos[:, 0] < 0
+            mask_bottom = self.pos[:, 1] > MAP_HEIGHT
+            mask_top = self.pos[:, 1] < 0
+
+            self.spe[mask_right, 0] = -np.abs(self.spe[mask_right, 0]) / 2
+            self.spe[mask_left, 0] = np.abs(self.spe[mask_left, 0]) / 2
+            self.spe[mask_bottom, 1] = -np.abs(self.spe[mask_bottom, 1]) / 2
+            self.spe[mask_top, 1] = np.abs(self.spe[mask_top, 1]) / 2
+
+
+
             self.pos += self.spe/10
 
             self.position_history[:, :, self.steps] = self.pos
