@@ -268,7 +268,7 @@ class Player:
                 self.traj = Text("Calcul de trajectoire en cours...", SCREEN_HEIGHT/2, SCREEN_WIDTH/2, 100,relative=False, color=(255,255,255))
                 threading.Thread(target=self.Trajectory, args=(p.planet,)).start()
             elif keys[pygame.K_s]:  # TEST ONLY
-                sd = Sondes(objects,10)
+                sd = Sondes(objects,self.sonde_number)
                 sd.run()
             elif keys[pygame.K_c]:
                 self.accessible_planets = []
@@ -422,19 +422,23 @@ class Sondes:
             self.position_history[:, :, self.steps] = self.pos
 
             self.steps += 1
-
-            if(self.steps >= 4 and self.steps % 3 == 0):
-                for i in range(len(self.pos)):
-                    try:
-                        pygame.draw.line(screen, (255, 255, 255), (posX(self.position_history[i,0,self.steps-1]), posY(self.position_history[i,1,self.steps-1])), (posX(self.position_history[i,0,self.steps-2-2]), posY(self.position_history[i,1,self.steps-2-2])))
-                    except:
-                        print("error: ",i,0,self.steps-1)
-                        exit()
+            if p.path:
+                if(self.steps >= p.path_step + 1 and self.steps % p.path_step == 0):
+                    for i in range(len(self.pos)):
+                        try:
+                            pygame.draw.line(screen, (255, 255, 255), (posX(self.position_history[i,0,self.steps-1]), posY(self.position_history[i,1,self.steps-1])), (posX(self.position_history[i,0,self.steps-p.path_step]), posY(self.position_history[i,1,self.steps-p.path_step])))
+                        except:
+                            print("error: ",i,0,self.steps-1)
+                            exit()
 
             if(comp.sum() == 0 or self.steps > 10000):
                 break
 
             pygame.display.update()
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    pygame.quit()
+                    quit()
 
         formated_arrivals = []
         formated_history = []
