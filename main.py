@@ -145,7 +145,7 @@ class Player:
         self.landing_count = 1
         self.distance = 0
         #Path settings
-        self.sonde_number = 360
+        self.sonde_number = 10
         self.path = True
         self.path_step = 1
         self.path_antialiasing = False
@@ -153,6 +153,7 @@ class Player:
         #Path variables
         self.show_accessible_planets = True
         self.sonde = None
+        self.sonde_history = []
         self.accessible_planets = []
         self.selected_planet = None
 
@@ -272,10 +273,10 @@ class Player:
                 threading.Thread(target=self.Trajectory, args=(p.planet,)).start()
             elif keys[pygame.K_s]:  # TEST ONLY
                 self.calculating = True
-                sd = Sondes(objects,self.sonde_number)
+                self.traj = Text("Calcul de trajectoire en cours...", SCREEN_HEIGHT/2, SCREEN_WIDTH/2, 100,relative=False, color=(255,255,255))
+                sd = Sondes(objects,self.sonde_number,self)
                 p.sonde = sd
                 threading.Thread(target=sd.run, args=()).start()
-                #sd.run()
             elif keys[pygame.K_c]:
                 self.accessible_planets = []
                 self.sonde = None
@@ -377,9 +378,9 @@ class Player:
         self.calculating = False
 
 class Sondes:
-    def __init__(self,planets,n):
+    def __init__(self,planets,n,parent=None):
         self.n = n
-        
+        self.parent = parent
         self.pos = np.zeros((n,2))   # positions of objects
         self.pos[:,0] = p.x # set all sondes to player position
         self.pos[:,1] = p.y
@@ -455,7 +456,9 @@ class Sondes:
 
         formated_arrivals = []
         formated_history = []
-        p.calculating = False
+        if self.parent != None:
+            self.parent.calculating = False
+            textlist.remove(self.parent.traj)
         for i,v in enumerate(self.arrivals):
             if v[0] != -1:
                 formated_arrivals.append((self.planet_copy[int(v[0])],v[1],v[0]*2*math.pi/self.n))
@@ -578,12 +581,14 @@ while True:
     for i in textlist:
         i.update()
 
-    if p.sonde != None:
-        if p.path:
+
+    if p.path and p.sonde != None:
                 if(p.sonde.steps >= p.path_step + 1 and p.sonde.steps % p.path_step == 0):
                     for i in range(len(p.sonde.pos)):
                         try:
+                            
                             pygame.draw.line(screen, (255, 255, 255), (posX(p.sonde.position_history[i,0,p.sonde.steps-1]), posY(p.sonde.position_history[i,1,p.sonde.steps-1])), (posX(p.sonde.position_history[i,0,p.sonde.steps-p.path_step]), posY(p.sonde.position_history[i,1,p.sonde.steps-p.path_step])))
+                            p.sonde_history.append(((posX(p.sonde.position_history[i,0,p.sonde.steps-1]), posY(p.sonde.position_history[i,1,p.sonde.steps-1])), (posX(p.sonde.position_history[i,0,p.sonde.steps-p.path_step]), posY(p.sonde.position_history[i,1,p.sonde.steps-p.path_step]))))
                         except:
                             print("error: ",i,0,p.sonde.steps-1)
                             exit()
