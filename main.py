@@ -441,7 +441,6 @@ class Sondes:
         print(self.position_history.shape)
         for i,v in enumerate(self.arrivals):
             if v[0] != -1:
-                print(v[3])
                 formated_arrivals.append((self.planet_copy[int(v[0])],v[1],v[0]*2*math.pi/self.n))
                 formated_history.append(self.position_history[int(v[0]),:,:])
         
