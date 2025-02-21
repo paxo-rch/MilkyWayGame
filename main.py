@@ -407,16 +407,12 @@ class Sondes:
             comp = np.where(np.any(dist < 30, axis=1), 0, 1)[:, None]
             
             mask = dist < 30  # shape: (n, number_of_planets)
-            # For each planet, check if any sonde has reached it (dist < 30)
             planet_reached = np.any(mask, axis=0)  # shape: (number_of_planets,)
-            # Identify planets which have not yet been marked as reached
             not_arrived = self.arrivals[:, 0] == -1
-            # For planets reached this step and not already recorded
             to_record = planet_reached & not_arrived
             if np.any(to_record):
-                # For each planet, get the index of the first sonde that reached it
                 first_sonde_ids = np.argmax(mask, axis=0)  # shape: (number_of_planets,)
-                self.arrivals[to_record, 0] = first_sonde_ids[to_record]
+                self.arrivals[to_record, 0] = first_sonde_ids[to_record]    # sonde id
                 self.arrivals[to_record, 1] = self.steps
 
             self.spe -= G * (diff / dist[:, :, np.newaxis] ** 3).sum(axis=1) * 20000
@@ -441,12 +437,16 @@ class Sondes:
             pygame.display.update()
 
         formated_arrivals = []
-        for id,i in enumerate(self.arrivals):
-            if i[0] != -1:
-                formated_arrivals.append((self.planet_copy[int(i[0])],i[1],id*2*math.pi/self.n))
+        formated_history = []
+        print(self.position_history.shape)
+        for i,v in enumerate(self.arrivals):
+            if v[0] != -1:
+                print(v[3])
+                formated_arrivals.append((self.planet_copy[int(v[0])],v[1],v[0]*2*math.pi/self.n))
+                formated_history.append(self.position_history[int(v[0]),:,:])
         
-        return formated_arrivals # each row is a sonde that reached a planet first, (planet, arrival_time, angle)
-
+        return (formated_arrivals, formated_history) # each row is a sonde that reached a planet first, (planet, arrival_time, angle)
+                        # ATTENTION: l'historique est en format [ [[x,x,x,x,x,x,x],[y,y,y,y,y,y,y]], [[x,x,x,x,x,x,x],[y,y,y,y,y,y,y]] ...]
 
 
 class Sonde:
