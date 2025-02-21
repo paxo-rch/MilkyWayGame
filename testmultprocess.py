@@ -298,7 +298,7 @@ class Player:
                 self.oldMousePosition = pygame.mouse.get_pos()
             
             
-            if mouseState and not self.throw and not self.calculating and self.map:
+            if mouseState and not self.throw and not self.calculating:
                 for i in objects:
                     if  i != self.planet and math.sqrt((self.oldMousePosition[0] - posX(i.x))**2 + (self.oldMousePosition[1] - posY(i.y))**2) < 20:
                         self.selected_planet = i
@@ -553,11 +553,26 @@ for i in range(PLANET_NUMBER):
 
 p = Player(objects[0])
 
-
-
-        
-
+def test(path1,sonde,sonde_history,steps,cursor,output):
+    while True:
+        path1 = path1.get()
+        sonde = sonde.get()
+        sonde_history = sonde_history.get()
+        steps = steps.get()
+        cursor = cursor.get()
+        if path1 and sonde is not None and sonde_history != []:
+            for i in sonde_history:
+                    path = i[:sonde.steps]
+                    if len(path) >= 2:
+                        coordsx = path[:, 0]
+                        coordsy = path[:, 1]    # Transpose to (2, N) shape
+                        x = SCREEN_WIDTH//2 + (coordsx - cursor[0]) * p.zoom
+                        y = SCREEN_HEIGHT//2 + (coordsy - cursor[1]) * p.zoom
+                        points = np.column_stack((x, y)).astype(int)
+                        output.put(points)
                         
+path,sonde,sonde_history,steps,cursor,output = [multiprocessing.Queue() for i in range(6)]
+multiprocessing.Process(target=test, args=(path,sonde,sonde_history,steps,cursor,output)).start()
 while True:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
@@ -581,17 +596,15 @@ while True:
             if i == p.selected_planet:
                 pygame.draw.circle(screen, (0, 0, 255), (posX(i.x), posY(i.y)), 20 * p.zoom)
     for i in textlist:
-        i.update()            
+        i.update()
+
+    
+        
+                    
     if p.map:    
         for i in p.accessible_planets:
             if i[0] != p.selected_planet:
                 pygame.draw.circle(screen, (0, 255, 0), (posX(i[0].x), posY(i[0].y)), 20 * p.zoom)
-    if p.path and p.sonde is not None and p.sonde.sonde_history != []:
-            for i in p.sonde.sonde_history:
-                    path = i[:p.sonde.steps]
-                    if len(path) >= 2:
-                        points = np.column_stack((posX(path[:, 0]), posY(path[:, 1] ))).astype(int)
-                        pygame.draw.lines(screen, (255, 255, 255), False, points)
     mytext.setText("Fuel: " + str(round(p.fuel,1)))
     score.setText("Score: " + str(p.score))
     p.update()
