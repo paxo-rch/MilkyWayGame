@@ -144,16 +144,19 @@ class Player:
         self.thrust = False
         self.landing_count = 1
         self.distance = 0
-        self.pathdraw = {}
+        #Path settings
+        self.sonde_number = 360
         self.path = True
         self.path_step = 1
         self.path_antialiasing = False
         self.clean_path = True
+        #Path variables
         self.show_accessible_planets = True
+        self.sonde = None
         self.accessible_planets = []
-        self.sonde_number = 360
-        self.map = False
         self.selected_planet = None
+
+        self.map = False
         self.score = 0
         self.calculating = False
         self.icon_rocket = pygame.image.load("rocket.png")
@@ -268,11 +271,14 @@ class Player:
                 self.traj = Text("Calcul de trajectoire en cours...", SCREEN_HEIGHT/2, SCREEN_WIDTH/2, 100,relative=False, color=(255,255,255))
                 threading.Thread(target=self.Trajectory, args=(p.planet,)).start()
             elif keys[pygame.K_s]:  # TEST ONLY
+                self.calculating = True
                 sd = Sondes(objects,self.sonde_number)
-                sd.run()
+                p.sonde = sd
+                threading.Thread(target=sd.run, args=()).start()
+                #sd.run()
             elif keys[pygame.K_c]:
                 self.accessible_planets = []
-                self.pathdraw.clear()
+                self.sonde = None
             elif keys[pygame.K_m]:
                 self.map = not self.map
                 time.sleep(0.1)
@@ -434,29 +440,22 @@ class Sondes:
             self.pos += self.spe/10
 
             self.position_history[:, :, self.steps] = self.pos
-
             self.steps += 1
-            if p.path:
+            """            if p.path:
                 if(self.steps >= p.path_step + 1 and self.steps % p.path_step == 0):
                     for i in range(len(self.pos)):
                         try:
                             pygame.draw.line(screen, (255, 255, 255), (posX(self.position_history[i,0,self.steps-1]), posY(self.position_history[i,1,self.steps-1])), (posX(self.position_history[i,0,self.steps-p.path_step]), posY(self.position_history[i,1,self.steps-p.path_step])))
                         except:
                             print("error: ",i,0,self.steps-1)
-                            exit()
-
+                            exit()"""
             if(comp.sum() == 0 or self.steps > 10000):
                 break
 
-            pygame.display.update()
-            for event in pygame.event.get():
-                if event.type == pygame.QUIT:
-                    pygame.quit()
-                    quit()
 
         formated_arrivals = []
         formated_history = []
-        print(self.position_history.shape)
+        p.calculating = False
         for i,v in enumerate(self.arrivals):
             if v[0] != -1:
                 formated_arrivals.append((self.planet_copy[int(v[0])],v[1],v[0]*2*math.pi/self.n))
@@ -579,15 +578,15 @@ while True:
     for i in textlist:
         i.update()
 
-    for i in p.pathdraw.keys():
-        if p.path_antialiasing:
-                if len(p.pathdraw[i][0]) > 2:
-                    pygame.draw.aalines(screen,(255,255,255),False,p.pathdraw[i][0])
-        else:
-            for j in range(0,(len(p.pathdraw[i][0])-(1+p.path_step)),p.path_step):
-                if len(p.pathdraw[i][0])-(p.path_step) > j+p.path_step:
-                        pygame.draw.line(screen, (255, 255, 255), (posX(p.pathdraw[i][0][j][0]), posY(p.pathdraw[i][0][j][1])), (posX(p.pathdraw[i][0][j+p.path_step][0]), posY(p.pathdraw[i][0][j+p.path_step][1])))
-
+    if p.sonde != None:
+        if p.path:
+                if(p.sonde.steps >= p.path_step + 1 and p.sonde.steps % p.path_step == 0):
+                    for i in range(len(p.sonde.pos)):
+                        try:
+                            pygame.draw.line(screen, (255, 255, 255), (posX(p.sonde.position_history[i,0,p.sonde.steps-1]), posY(p.sonde.position_history[i,1,p.sonde.steps-1])), (posX(p.sonde.position_history[i,0,p.sonde.steps-p.path_step]), posY(p.sonde.position_history[i,1,p.sonde.steps-p.path_step])))
+                        except:
+                            print("error: ",i,0,p.sonde.steps-1)
+                            exit()
     if p.map:    
         for i in p.accessible_planets:
             if i[0] != p.selected_planet:
