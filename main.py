@@ -268,7 +268,7 @@ class Player:
                 self.traj = Text("Calcul de trajectoire en cours...", SCREEN_HEIGHT/2, SCREEN_WIDTH/2, 100,relative=False, color=(255,255,255))
                 threading.Thread(target=self.Trajectory, args=(p.planet,)).start()
             elif keys[pygame.K_s]:  # TEST ONLY
-                sd = Sondes(objects,1000)
+                sd = Sondes(objects,10)
                 sd.run()
             elif keys[pygame.K_c]:
                 self.accessible_planets = []
@@ -394,7 +394,8 @@ class Sondes:
         
         self.planets = np.zeros((len(self.planet_copy),2))    # positions of planets
         
-        self.arrivals = np.ones((n))
+        self.arrivals = np.zeros((len(self.planet_copy),3))  # for each planet, (sonde id, arrival time, angle)  # angle not calculated during simulation
+        self.arrivals[:,0] = -1
         for i in range(len(self.planet_copy)):
             self.planets[i] = [self.planet_copy[i].x,self.planet_copy[i].y]
 
@@ -404,13 +405,23 @@ class Sondes:
             dist = np.linalg.norm(diff, axis=-1)    # (n, planets) -> distance
 
             comp = np.where(np.any(dist < 30, axis=1), 0, 1)[:, None]
+            
+            mask = dist < 30  # shape: (n, number_of_planets)
+            # For each planet, check if any sonde has reached it (dist < 30)
+            planet_reached = np.any(mask, axis=0)  # shape: (number_of_planets,)
+            # Identify planets which have not yet been marked as reached
+            not_arrived = self.arrivals[:, 0] == -1
+            # For planets reached this step and not already recorded
+            to_record = planet_reached & not_arrived
+            if np.any(to_record):
+                # For each planet, get the index of the first sonde that reached it
+                first_sonde_ids = np.argmax(mask, axis=0)  # shape: (number_of_planets,)
+                self.arrivals[to_record, 0] = first_sonde_ids[to_record]
+                self.arrivals[to_record, 1] = self.steps
 
             self.spe -= G * (diff / dist[:, :, np.newaxis] ** 3).sum(axis=1) * 20000
             self.spe *= comp
-            #print(self.spe)
             self.pos += self.spe/10
-
-            #print("pos:",self.spe)
 
             self.position_history[:, :, self.steps] = self.pos
 
@@ -424,12 +435,17 @@ class Sondes:
                         print("error: ",i,0,self.steps-1)
                         exit()
 
-            #if(comp.sum() == 0):
-            #    break
+            if(comp.sum() == 0 or self.steps > 10000):
+                break
 
             pygame.display.update()
 
-        time.sleep(10)
+        formated_arrivals = []
+        for id,i in enumerate(self.arrivals):
+            if i[0] != -1:
+                formated_arrivals.append((self.planet_copy[int(i[0])],i[1],id*2*math.pi/self.n))
+        
+        return formated_arrivals # each row is a sonde that reached a planet first, (planet, arrival_time, angle)
 
 
 
