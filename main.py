@@ -268,7 +268,7 @@ class Player:
                 self.traj = Text("Calcul de trajectoire en cours...", SCREEN_HEIGHT/2, SCREEN_WIDTH/2, 100,relative=False, color=(255,255,255))
                 threading.Thread(target=self.Trajectory, args=(p.planet,)).start()
             elif keys[pygame.K_s]:  # TEST ONLY
-                sd = Sondes(objects,360)
+                sd = Sondes(objects,1000)
                 sd.run()
             elif keys[pygame.K_c]:
                 self.accessible_planets = []
@@ -403,13 +403,11 @@ class Sondes:
             diff = self.pos[:, np.newaxis, :] - self.planets[np.newaxis, :, :]
             dist = np.linalg.norm(diff, axis=-1)    # (n, planets) -> distance
 
-            #print(dist.shape)
-            comp = dist[:,:]<30
-            comp = comp.sum(axis=1)
-            comp = comp[:, np.newaxis]
+            comp = np.where(np.any(dist < 30, axis=1), 0, 1)[:, None]
 
             self.spe -= G * (diff / dist[:, :, np.newaxis] ** 3).sum(axis=1) * 20000
-            #self.spe *= comp
+            self.spe *= comp
+            #print(self.spe)
             self.pos += self.spe/10
 
             #print("pos:",self.spe)
@@ -418,11 +416,10 @@ class Sondes:
 
             self.steps += 1
 
-            if(self.steps >= 2):
-                print(self.position_history.shape)
+            if(self.steps >= 4 and self.steps % 3 == 0):
                 for i in range(len(self.pos)):
                     try:
-                        pygame.draw.line(screen, (255, 255, 255), (posX(self.position_history[i,0,self.steps-1]), posY(self.position_history[i,1,self.steps-1])), (posX(self.position_history[i,0,self.steps-2]), posY(self.position_history[i,1,self.steps-2])))
+                        pygame.draw.line(screen, (255, 255, 255), (posX(self.position_history[i,0,self.steps-1]), posY(self.position_history[i,1,self.steps-1])), (posX(self.position_history[i,0,self.steps-2-2]), posY(self.position_history[i,1,self.steps-2-2])))
                     except:
                         print("error: ",i,0,self.steps-1)
                         exit()
