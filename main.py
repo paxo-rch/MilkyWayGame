@@ -26,16 +26,21 @@ pygame.init()
 screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
 objects = []
 
+
 def connect():
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     s.connect(("127.0.0.1", 986))
     return s
 
+
 def posX(x):
     return SCREEN_WIDTH//2 + (x - p.cursor[0]) * p.zoom
 
+
 def posY(y):
     return SCREEN_HEIGHT//2 + (y - p.cursor[1]) * p.zoom
+
+
 
 class Text:
 
@@ -50,6 +55,7 @@ class Text:
         self.relative = relative
         textlist.append(self)
 
+
     def update(self):
 
         if self.relative:
@@ -58,11 +64,13 @@ class Text:
         else:
             screen.blit(self.render, (self.x, self.y))
 
+
     def setText(self, text):
 
         if self.text != text:
             self.text = text
             self.render = self.font.render(self.text, True,pygame.Color(self.color[0],self.color[1],self.color[2]))
+
 
     def remove(self):
         textlist.remove(self)
@@ -77,10 +85,12 @@ class Image:
         self.scaled_image = None
         imagelist.append(self)
 
+
     def update(self):
 
         if self.image is not None:
             self.scaled_image = pygame.transform.scale(self.image,(self.image.get_width()*p.zoom*self.scale,self.image.get_height()*p.zoom*self.scale))
+
 
     def remove(self):
         imagelist.remove(self)
@@ -93,6 +103,7 @@ class Object:
         Object.t = time.time()*1
         #print(t)
 
+
     def __init__(self, x, y, m):
         self.x = x
         self.y = y
@@ -101,7 +112,8 @@ class Object:
         self.transparent = False
         self.parent = None
         self.children = []
-        
+
+
     def setParent(self, parent, orbit_radius):
         self.parent = parent
         self.parent.children.append(self)
@@ -109,7 +121,8 @@ class Object:
         self.orbit_radius = orbit_radius
         self.angular_velocity = math.sqrt(G * 1 / self.orbit_radius) * 2 * math.pi
         self.first_angular_position = random.random() * 2 * math.pi
-    
+
+
     def draw(self):
         x,y = posX(self.x), posY(self.y)
 
@@ -119,17 +132,21 @@ class Object:
         if not self.transparent:
             pygame.draw.circle(screen, (255, 255, 255), (x, y), self.r * p.zoom)
 
+
     def drawAll(self):
         self.draw()
 
         for i in self.children:
             i.drawAll()
 
+
     def getAbsoluteX(self):
         return self.x
 
+
     def getAbsoluteY(self):
         return self.y
+
 
     def updateAll(self):
         self.update()
@@ -137,11 +154,14 @@ class Object:
         for i in self.children:
             i.updateAll()
 
+
     def update(self):
 
         if(self.parent is not None):
             self.x = self.parent.getAbsoluteX() + self.orbit_radius * math.cos(self.first_angular_position + self.angular_velocity * Object.t)
             self.y = self.parent.getAbsoluteY() + self.orbit_radius * math.sin(self.first_angular_position + self.angular_velocity * Object.t)
+
+
 
 class Player:
 
@@ -193,7 +213,8 @@ class Player:
 
         self.cursor = [MAP_WIDTH/2, MAP_HEIGHT/2]
         self.zoom = 1
-    
+
+
     def draw(self):
         #pygame.draw.circle(screen, (255, 0, 0), (posX(self.x), posY(self.y)), 10 * p.zoom)
 
@@ -216,6 +237,7 @@ class Player:
 
         if(not self.throw):
             pygame.draw.line(screen, (255, 255, 255), (posX(self.x), posY(self.y)), (posX(self.x + math.cos(self.angle) * self.projection_length), posY(self.y + math.sin(self.angle) * self.projection_length)))
+
 
     def update(self):
         start = time.perf_counter()
@@ -377,6 +399,7 @@ class Player:
         self.score = round(self.distance)
         end = time.perf_counter() - start
 
+
     def Trajectory(self,planet):
         distance_list = []
         angle_list = []
@@ -438,6 +461,8 @@ class Player:
         textlist.remove(self.traj)
         self.calculating = False
 
+
+
 class Sondes:
 
     def __init__(self,planets,n,parent=None):
@@ -475,6 +500,7 @@ class Sondes:
 
         for i in range(len(self.planet_copy)):
             self.planets[i] = [self.planet_copy[i].x,self.planet_copy[i].y]
+
 
     def run(self):
 
@@ -542,6 +568,7 @@ class Sondes:
                         # ATTENTION: l'historique est en format [ [[x,x,x,x,x,x,x],[y,y,y,y,y,y,y]], [[x,x,x,x,x,x,x],[y,y,y,y,y,y,y]] ...]
 
 
+
 class Sonde:
 
     def __init__(self,planet,angle):
@@ -556,7 +583,8 @@ class Sonde:
         self.planete = planet
         self.throw = False
         self.distance = 0
-        
+
+
     def update(self):
         start = time.perf_counter()
 
@@ -639,9 +667,8 @@ p = Player(objects[0])
 
 
 
-        
 
-                        
+
 while True:
 
     for event in pygame.event.get():
