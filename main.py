@@ -185,7 +185,7 @@ class Player:
         self.distance = 0
         
         #Path settings
-        self.sonde_number = 360
+        self.sonde_number = 3600
         self.path = True
         self.path_step = 1
         self.path_antialiasing = False
@@ -400,67 +400,6 @@ class Player:
         end = time.perf_counter() - start
 
 
-    def Trajectory(self,planet):
-        distance_list = []
-        angle_list = []
-        liste_sonde = []
-
-        for i in range(0,self.sonde_number):
-            sonde = Sonde(planet,i)
-
-            if self.path:
-                self.pathdraw[sonde] = [[],[]]
-
-            liste_sonde.append(sonde)
-
-        while len(distance_list) < self.sonde_number:
-
-            for i in liste_sonde:
-                rsult = i.update()
-
-                if self.path:
-                    self.pathdraw[i][0].append((i.x, i.y))
-
-                if rsult != None:
-
-                    if self.path:
-                        self.pathdraw[i][1].append((i.planete,rsult[1],rsult[0]))
-
-                    if self.show_accessible_planets:
-
-                        for j in self.accessible_planets:
-
-                            if j[0] == i.planete and j[2] > rsult[1]:
-                                self.accessible_planets.remove(j)
-
-                        self.accessible_planets.append((i.planete,rsult[0],rsult[1]))
-
-                    distance_list.append(rsult[1])
-                    angle_list.append(rsult[0])
-                    liste_sonde.remove(i)
-
-
-        if self.clean_path and self.path:
-
-            for i in self.pathdraw.keys():
-
-                for j in self.pathdraw.keys():
-
-                    if i != j and len(self.pathdraw[i]) != 0 and len(self.pathdraw[j]) != 0:
-
-                        if self.pathdraw[i][1][0][0] == self.pathdraw[j][1][0][0]:
-
-                            if self.pathdraw[i][1][0][1] < self.pathdraw[j][1][0][1]:
-                                self.pathdraw[j][0] = []
-
-                            else:
-                                self.pathdraw[i][0] = []
-
-        best_distance = max(distance_list)
-        self.angle = angle_list[distance_list.index(best_distance)]
-        textlist.remove(self.traj)
-        self.calculating = False
-
 
 
 class Sondes:
@@ -567,76 +506,6 @@ class Sondes:
         return (formated_arrivals, formated_history) # each row is a sonde that reached a planet first, (planet, arrival_time, angle)
                         # ATTENTION: l'historique est en format [ [[x,x,x,x,x,x,x],[y,y,y,y,y,y,y]], [[x,x,x,x,x,x,x],[y,y,y,y,y,y,y]] ...]
 
-
-
-class Sonde:
-
-    def __init__(self,planet,angle):
-        self.x = planet.x
-        self.y = planet.y
-        self.prevx = planet.x
-        self.prevy = planet.y
-        self.angle = angle * math.pi/(p.sonde_number/2)
-        self.throwspeed = p.throw_speed
-        self.vx = 0
-        self.vy = 0
-        self.planete = planet
-        self.throw = False
-        self.distance = 0
-
-
-    def update(self):
-        start = time.perf_counter()
-
-        if self.throw == False:
-                self.throw = True
-                self.vx = self.throwspeed * math.cos(self.angle)
-                self.vy = self.throwspeed * math.sin(self.angle)
-
-        for i in objects:
-                
-                if(i != self.planete):
-                    dist = math.sqrt((i.getAbsoluteX() - self.x)**2 + (i.getAbsoluteY() - self.y)**2)
-
-                    if(dist < 30):
-                        self.x = i.getAbsoluteX()
-                        self.y = i.getAbsoluteY()
-                        self.vx = 0
-                        self.vy = 0
-                        self.throw = False
-                        self.planete = i
-                        return (self.angle,self.distance)
-
-                    elif(dist != 0):
-                        dx = (i.getAbsoluteX() - self.x)
-                        dy = (i.getAbsoluteY() - self.y)
-                        angle = math.atan2(dy, dx)
-                        a = 20000 * G / (dist**2) 
-                        self.vx += math.cos(angle) * a
-                        self.vy += math.sin(angle) * a
-
-        if(self.x > MAP_WIDTH):
-                self.x = MAP_WIDTH
-                self.vx = - abs(self.vx * 0.5)
-
-        if(self.x < 0):
-                self.x = 0
-                self.vx = abs(self.vx * 0.5)
-
-        if(self.y > MAP_HEIGHT):
-                self.y = MAP_HEIGHT
-                self.vy = - abs(self.vy * 0.5)
-
-        if(self.y < 0):
-                self.y = 0
-                self.vy = abs(self.vy * 0.5)
-
-        self.prevx = self.x
-        self.prevy = self.y
-        self.x += self.vx/10
-        self.y += self.vy/10
-        self.distance += math.sqrt((self.vx/10)**2 + (self.vy/10)**2)
-        end = time.perf_counter() - start
 
 
 imagelist = []
