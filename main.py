@@ -185,7 +185,7 @@ class Player:
         self.distance = 0
         
         #Path settings
-        self.sonde_number = 3600
+        self.sonde_number = 360
         self.path = True
         self.path_step = 1
         self.path_antialiasing = False
@@ -516,6 +516,7 @@ imagelune = Image(pygame.image.load("assets/moons/moon1.png"))
 
 mytext = Text("Fuel: ", SCREEN_WIDTH*0.05, SCREEN_HEIGHT*0.9, 50, relative=False, color=(255,255,255))
 score = Text("Score: ", SCREEN_WIDTH*0.05, SCREEN_HEIGHT*0.05, 50, relative=False, color=(255,255,255))
+fps_text = Text("FPS: ", SCREEN_WIDTH*0.05, SCREEN_HEIGHT*0.1, 50, relative=False, color=(255,255,255))
 
 for i in range(PLANET_NUMBER):
     o = Object(random.randint(0, MAP_WIDTH), random.randint(0, MAP_WIDTH), 10)
@@ -539,7 +540,7 @@ p = Player(objects[0])
 
 
 while True:
-
+    start = time.perf_counter()
     for event in pygame.event.get():
 
         if event.type == pygame.QUIT:
@@ -570,12 +571,7 @@ while True:
     for i in textlist:
         i.update()
 
-    if p.map:
 
-        for i in p.accessible_planets:
-
-            if i[0] != p.selected_planet:
-                pygame.draw.circle(screen, (0, 255, 0), (posX(i[0].x), posY(i[0].y)), 20 * p.zoom)
 
     if p.path and p.sonde is not None and p.sonde.sonde_history != []:
             
@@ -583,13 +579,17 @@ while True:
                     path = i[:p.sonde.steps]
 
                     if len(path) >= 2:
-                        points = np.column_stack((posX(path[:, 0]), posY(path[:, 1] ))).astype(int)
-                        pygame.draw.lines(screen, (255, 255, 255), False, points)
+                        points = np.column_stack((posX(path[:, 0]), posY(path[:, 1]))).astype(int)
+                        pygame.draw.aalines(screen, (255, 255, 255), False, points)
 
 
     mytext.setText("Fuel: " + str(round(p.fuel,1)))
     score.setText("Score: " + str(p.score))
+    
     p.update()
     p.draw()
     pygame.display.update()
     pygame.time.Clock().tick(60)
+    fps = time.perf_counter() - start
+
+    fps_text.setText("FPS: " + str(round(1/fps)))
