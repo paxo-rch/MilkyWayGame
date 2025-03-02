@@ -186,7 +186,7 @@ class Player:
         
         #Path settings
         self.sonde_number = 45
-        self.path = False
+        self.path = True
         self.path_step = 1
         self.path_antialiasing = False
         self.clean_path = True
@@ -522,8 +522,8 @@ imagelune = Image(pygame.image.load("assets/moons/moon1.png"))
 mytext = Text("Fuel: ", SCREEN_WIDTH*0.05, SCREEN_HEIGHT*0.9, 50, relative=False, color=(255,255,255))
 score = Text("Score: ", SCREEN_WIDTH*0.05, SCREEN_HEIGHT*0.05, 50, relative=False, color=(255,255,255))
 fps_text = Text("FPS: ", SCREEN_WIDTH*0.05, SCREEN_HEIGHT*0.1, 50, relative=False, color=(255,255,255))
-update_fps = Text("0", SCREEN_WIDTH*0.05, SCREEN_HEIGHT*0.2, 50, relative=False, color=(255,255,255))
-sonde_update = Text("0", SCREEN_WIDTH*0.05, SCREEN_HEIGHT*0.15, 50, relative=False, color=(255,255,255))	
+update_fps = Text("PUS: 0", SCREEN_WIDTH*0.05, SCREEN_HEIGHT*0.2, 50, relative=False, color=(255,255,255))
+sonde_update = Text("SUS: 0", SCREEN_WIDTH*0.05, SCREEN_HEIGHT*0.15, 50, relative=False, color=(255,255,255))	
 
 for i in range(PLANET_NUMBER):
     o = Object(random.randint(0, MAP_WIDTH), random.randint(0, MAP_WIDTH), 10)
