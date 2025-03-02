@@ -185,8 +185,8 @@ class Player:
         self.distance = 0
         
         #Path settings
-        self.sonde_number = 360
-        self.path = True
+        self.sonde_number = 45
+        self.path = False
         self.path_step = 1
         self.path_antialiasing = False
         self.clean_path = True
@@ -398,6 +398,7 @@ class Player:
 
         self.score = round(self.distance)
         end = time.perf_counter() - start
+        update_fps.setText("PUS: " + str(int(1/end)))
 
 
 
@@ -444,6 +445,7 @@ class Sondes:
     def run(self):
 
         while True:
+            start = time.perf_counter()
             diff = self.pos[:, np.newaxis, :] - self.planets[np.newaxis, :, :]
             dist = np.linalg.norm(diff, axis=-1)    # (n, planets) -> distance
 
@@ -489,6 +491,9 @@ class Sondes:
             if(comp.sum() == 0 or self.steps > 10000):
                 break
 
+            end = time.perf_counter() - start
+            sonde_update.setText("SUS: " + str(int(1/end)))
+
 
         formated_arrivals = []
         formated_history = []
@@ -517,6 +522,8 @@ imagelune = Image(pygame.image.load("assets/moons/moon1.png"))
 mytext = Text("Fuel: ", SCREEN_WIDTH*0.05, SCREEN_HEIGHT*0.9, 50, relative=False, color=(255,255,255))
 score = Text("Score: ", SCREEN_WIDTH*0.05, SCREEN_HEIGHT*0.05, 50, relative=False, color=(255,255,255))
 fps_text = Text("FPS: ", SCREEN_WIDTH*0.05, SCREEN_HEIGHT*0.1, 50, relative=False, color=(255,255,255))
+update_fps = Text("0", SCREEN_WIDTH*0.05, SCREEN_HEIGHT*0.2, 50, relative=False, color=(255,255,255))
+sonde_update = Text("0", SCREEN_WIDTH*0.05, SCREEN_HEIGHT*0.15, 50, relative=False, color=(255,255,255))	
 
 for i in range(PLANET_NUMBER):
     o = Object(random.randint(0, MAP_WIDTH), random.randint(0, MAP_WIDTH), 10)
