@@ -320,18 +320,18 @@ class Player:
                     self.vx = self.throw_speed * math.cos(self.angle)
                     self.vy = self.throw_speed * math.sin(self.angle)
 
-                elif keys[pygame.K_s]:  # TEST ONLY
+                elif keys[pygame.K_s] and self.calculating == False:
                     self.calculating = True
                     self.traj = Text("Calcul de trajectoire en cours...", SCREEN_HEIGHT/2, SCREEN_WIDTH/2, 100,relative=False, color=(255,255,255))
                     sd = Sondes(objects,self.sonde_number,self)
                     p.sonde = sd
                     threading.Thread(target=sd.run, args=()).start()
 
-                elif keys[pygame.K_c]:
+                elif keys[pygame.K_c] and self.calculating == False:
                     self.accessible_planets = []
                     self.sonde = None
 
-                elif keys[pygame.K_m]:
+                elif keys[pygame.K_m] and self.calculating == False:
                     self.map = not self.map
                     time.sleep(0.1)
 
@@ -339,7 +339,7 @@ class Player:
                     self.path = not self.path
                     time.sleep(0.1)
 
-                elif keys[pygame.K_d]:
+                elif keys[pygame.K_d] and self.calculating == False:
                     self.debug = not self.debug
                     time.sleep(0.1)
             
@@ -483,7 +483,7 @@ class Sondes:
 
             self.position_history[:, :, self.steps] = self.pos
             
-            if self.parent != None:
+            if self.parent != None: 
 
                 for i in range(len(self.pos)):
                     self.sonde_history[i][self.steps] = self.pos[i]
@@ -584,14 +584,15 @@ while True:
 
 
 
-    if p.path and p.sonde is not None and p.sonde.sonde_history != []:
+    if p.sonde is not None and p.sonde.sonde_history != []:
             
             for i in p.sonde.sonde_history:
                     path = i[:p.sonde.steps]
 
                     if len(path) >= 2:
                         points = np.column_stack((posX(path[:, 0]), posY(path[:, 1]))).astype(int)
-                        pygame.draw.aalines(screen, (255, 255, 255), False, points)
+                        if p.path:
+                            pygame.draw.aalines(screen, (255, 255, 255), False, points)
     mytext.setText("Fuel: " + str(round(p.fuel,1)))
     score.setText("Score: " + str(p.score))
     if p.debug:
