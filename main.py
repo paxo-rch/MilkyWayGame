@@ -188,7 +188,6 @@ class Player:
         self.sonde_number = 10
         self.path = True
         self.path_step = 1
-        self.path_antialiasing = False
         self.clean_path = True
 
         #Path variables
