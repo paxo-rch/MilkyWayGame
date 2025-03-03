@@ -188,7 +188,7 @@ class Player:
         self.distance = 0
         
         #Path settings
-        self.sonde_number = 36
+        self.sonde_number = 3600
         self.path = True
         self.path_step = 1
         self.clean_path = True
@@ -311,22 +311,14 @@ class Player:
                 self.distance += math.sqrt((self.vx/10)**2 + (self.vy/10)**2)
 
 
-            if(not self.throw) and self.calculating == False:
+            if(not self.throw):
 
-                if (keys[pygame.K_SPACE] or keys[pygame.K_RETURN]) and self.fuel > self.fuel_consumption_throw:
+                if (keys[pygame.K_SPACE] or keys[pygame.K_RETURN]) and self.fuel > self.fuel_consumption_throw and self.calculating == False:
                     self.throw = True
                     self.landing_count += 1 
                     self.fuel -= self.fuel_consumption_throw
                     self.vx = self.throw_speed * math.cos(self.angle)
                     self.vy = self.throw_speed * math.sin(self.angle)
-
-
-                elif keys[pygame.K_UP]:
-                    self.calculating = True
-                    self.pathdraw.clear()
-                    self.accessible_planets = []
-                    self.traj = Text("Calcul de trajectoire en cours...", SCREEN_HEIGHT/2, SCREEN_WIDTH/2, 100,relative=False, color=(255,255,255))
-                    threading.Thread(target=self.Trajectory, args=(p.planet,)).start()
 
                 elif keys[pygame.K_s]:  # TEST ONLY
                     self.calculating = True
@@ -439,7 +431,7 @@ class Sondes:
                 self.planet_copy = np.delete(self.planet_copy,i)
                 break
         self.sonde_history = []
-        if self.parent != None and self.parent.path:
+        if self.parent != None:
             self.sonde_history = [np.zeros((10000, 2)) for i in range(n)]
 
         
@@ -491,7 +483,7 @@ class Sondes:
 
             self.position_history[:, :, self.steps] = self.pos
             
-            if self.parent != None and self.parent.path:
+            if self.parent != None:
 
                 for i in range(len(self.pos)):
                     self.sonde_history[i][self.steps] = self.pos[i]
