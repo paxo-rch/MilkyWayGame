@@ -185,7 +185,7 @@ class Player:
         self.distance = 0
         
         #Path settings
-        self.sonde_number = 10
+        self.sonde_number = 36
         self.path = True
         self.path_step = 1
         self.clean_path = True
@@ -400,12 +400,13 @@ class Player:
                 self.cursor = [self.x, self.y]
 
             self.score = round(self.distance)
+            time.sleep(1/60)
             end = time.perf_counter() - start
             if p.debug:
                 update_fps.setText("PUS: " + str(round(1/end)))
             else:
                 update_fps.setText("")
-            time.sleep(1/60)
+            
 
 
 
@@ -434,7 +435,7 @@ class Sondes:
             if(self.planet_copy[i] == self.parent.planet):
                 self.planet_copy = np.delete(self.planet_copy,i)
                 break
-
+        self.sonde_history = []
         if self.parent != None and self.parent.path:
             self.sonde_history = [np.zeros((10000, 2)) for i in range(n)]
 
@@ -519,7 +520,7 @@ class Sondes:
         return (formated_arrivals, formated_history) # each row is a sonde that reached a planet first, (planet, arrival_time, angle)
                         # ATTENTION: l'historique est en format [ [[x,x,x,x,x,x,x],[y,y,y,y,y,y,y]], [[x,x,x,x,x,x,x],[y,y,y,y,y,y,y]] ...]
 
-
+fps = 0
 
 imagelist = []
 textlist = []
@@ -598,15 +599,15 @@ while True:
                         pygame.draw.aalines(screen, (255, 255, 255), False, points)
     mytext.setText("Fuel: " + str(round(p.fuel,1)))
     score.setText("Score: " + str(p.score))
-
-    
-    
-    p.draw()
-    pygame.display.update()
-    fps = time.perf_counter() - start
     if p.debug:
         fps_text.setText("FPS: " + str(round(1/fps)))
     else:
         fps_text.setText("")
         update_fps.setText("")
         sonde_update.setText("")
+    
+    
+    p.draw()
+    pygame.display.update()
+    fps = time.perf_counter() - start
+    
