@@ -188,7 +188,7 @@ class Player:
         self.distance = 0
         
         #Path settings
-        self.sonde_number = 3600
+        self.sonde_number = 360
         self.path = True
         self.path_step = 1
         self.clean_path = True
@@ -339,7 +339,7 @@ class Player:
                     self.path = not self.path
                     time.sleep(0.1)
 
-                elif keys[pygame.K_d] and self.calculating == False:
+                elif keys[pygame.K_d]:
                     self.debug = not self.debug
                     time.sleep(0.1)
             
@@ -430,9 +430,8 @@ class Sondes:
             if(self.planet_copy[i] == self.parent.planet):
                 self.planet_copy = np.delete(self.planet_copy,i)
                 break
-        self.sonde_history = []
         if self.parent != None:
-            self.sonde_history = [np.zeros((10000, 2)) for i in range(n)]
+            self.sonde_history = np.zeros((n,10000, 2))
 
         
         self.planets = np.zeros((len(self.planet_copy),2))    # positions of planets
@@ -445,7 +444,7 @@ class Sondes:
 
 
     def run(self):
-
+        s_time = time.perf_counter()
         while True:
             start = time.perf_counter()
             diff = self.pos[:, np.newaxis, :] - self.planets[np.newaxis, :, :]
@@ -477,24 +476,21 @@ class Sondes:
             self.spe[mask_bottom, 1] = -np.abs(self.spe[mask_bottom, 1]) / 2
             self.spe[mask_top, 1] = np.abs(self.spe[mask_top, 1]) / 2
 
-
+            self.position_history[:,:,self.steps] = self.pos
 
             self.pos += self.spe/10
 
-            self.position_history[:, :, self.steps] = self.pos
             
             if self.parent != None: 
-
-                for i in range(len(self.pos)):
-                    self.sonde_history[i][self.steps] = self.pos[i]
-
+                self.sonde_history = np.transpose(self.position_history,(0,2,1))
+            
             self.steps += 1
 
             if(comp.sum() == 0 or self.steps > 10000):
                 break
 
             end = time.perf_counter() - start
-            if p.debug:
+            if self.parent != None and self.parent.debug:
                 sonde_update.setText("SUS: " + str(round(1/end)))
             else:
                 sonde_update.setText("")
@@ -511,7 +507,11 @@ class Sondes:
             if v[0] != -1:
                 formated_arrivals.append((self.planet_copy[int(v[0])],v[1],v[0]*2*math.pi/self.n))
                 formated_history.append(self.position_history[int(v[0]),:,:])
-
+        if self.parent != None and self.parent.debug:
+            sonde_time.setText("Recon Time: " + str(round(time.perf_counter() - s_time)))
+        else:
+            sonde_update.setText("")
+        formated_history = np.transpose(formated_history,(0,2,1))
         return (formated_arrivals, formated_history) # each row is a sonde that reached a planet first, (planet, arrival_time, angle)
                         # ATTENTION: l'historique est en format [ [[x,x,x,x,x,x,x],[y,y,y,y,y,y,y]], [[x,x,x,x,x,x,x],[y,y,y,y,y,y,y]] ...]
 
@@ -528,7 +528,7 @@ score = Text("Score: ", SCREEN_WIDTH*0.05, SCREEN_HEIGHT*0.05, 50, relative=Fals
 fps_text = Text("", SCREEN_WIDTH*0.05, SCREEN_HEIGHT*0.1, 50, relative=False, color=(255,255,255))
 update_fps = Text("", SCREEN_WIDTH*0.05, SCREEN_HEIGHT*0.2, 50, relative=False, color=(255,255,255))
 sonde_update = Text("", SCREEN_WIDTH*0.05, SCREEN_HEIGHT*0.15, 50, relative=False, color=(255,255,255))	
-
+sonde_time = Text("", SCREEN_WIDTH*0.05, SCREEN_HEIGHT*0.25, 50, relative=False, color=(255,255,255))
 for i in range(PLANET_NUMBER):
     o = Object(random.randint(0, MAP_WIDTH), random.randint(0, MAP_WIDTH), 10)
     o.image = imageplanete
@@ -584,11 +584,9 @@ while True:
 
 
 
-    if p.sonde is not None and p.sonde.sonde_history != []:
-            
+    if p.sonde is not None:
             for i in p.sonde.sonde_history:
                     path = i[:p.sonde.steps]
-
                     if len(path) >= 2:
                         points = np.column_stack((posX(path[:, 0]), posY(path[:, 1]))).astype(int)
                         if p.path:
@@ -601,9 +599,10 @@ while True:
         fps_text.setText("")
         update_fps.setText("")
         sonde_update.setText("")
-    
+        sonde_time.setText("")
     
     p.draw()
+    time.sleep(1/60)
     pygame.display.update()
     fps = time.perf_counter() - start
     
