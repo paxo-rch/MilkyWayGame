@@ -537,9 +537,15 @@ update_fps = Text("", SCREEN_WIDTH*0.05, SCREEN_HEIGHT*0.2, 50, relative=False, 
 sonde_update = Text("", SCREEN_WIDTH*0.05, SCREEN_HEIGHT*0.15, 50, relative=False, color=(255,255,255))	
 
 for i in range(PLANET_NUMBER):
-    o = Object(random.randint(0, MAP_WIDTH), random.randint(0, MAP_WIDTH), 10)
+    type = random.choice(planets.Planet.types)
+    multiplier = random.randint(1, 2)
+
+    reference = planets.Planet(random.randint(0, MAP_WIDTH), random.randint(0, MAP_WIDTH), type, objects, multiplier)
+
+    o = Object(random.randint(0, MAP_WIDTH), random.randint(0, MAP_WIDTH), multiplier)
     o.image = imageplanete
     o.transparent = True
+    o.reference = reference
 
     for j in range(random.randint(0, MOON_NUMBER)):
         c = Object(0, 0, 5)
