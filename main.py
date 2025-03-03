@@ -185,7 +185,7 @@ class Player:
         self.distance = 0
         
         #Path settings
-        self.sonde_number = 360
+        self.sonde_number = 10
         self.path = True
         self.path_step = 1
         self.path_antialiasing = False
@@ -204,6 +204,7 @@ class Player:
         self.flame_animation = []
         self.i = 0
 
+        self.debug = False
         # read the gif file
         for f in range(1, 29):
             self.flame_animation.append(pygame.image.load(f"assets/player/flame_gif/{f}.gif"))
@@ -240,166 +241,172 @@ class Player:
 
 
     def update(self):
-        start = time.perf_counter()
-        keys = pygame.key.get_pressed()
+        while True:
+            start = time.perf_counter()
+            keys = pygame.key.get_pressed()
 
-        if keys[pygame.K_RIGHT]:
-                self.angle += self.turn_speed * math.pi / 360
+            if keys[pygame.K_RIGHT]:
+                    self.angle += self.turn_speed * math.pi / 360
 
-        elif keys[pygame.K_LEFT]:
-                self.angle -= self.turn_speed * math.pi / 360
+            elif keys[pygame.K_LEFT]:
+                    self.angle -= self.turn_speed * math.pi / 360
 
-        if self.throw:
-
-            for i in objects:
-                
-                if(i != self.planet):
-                    dist = math.sqrt((i.getAbsoluteX() - self.x)**2 + (i.getAbsoluteY() - self.y)**2)
-                    
-                    if(dist < 30):
-                        self.x = i.getAbsoluteX()
-                        self.y = i.getAbsoluteY()
-                        self.vx = 0
-                        self.vy = 0
-                        self.throw = False
-                        self.planet = i
-
-                    elif(dist != 0):
-                        dx = (i.getAbsoluteX() - self.x)
-                        dy = (i.getAbsoluteY() - self.y)
-
-                        angle = math.atan2(dy, dx)
-
-                        a = 20000 * G / (dist**2)   # from F=ma and G=m1m2/r^2 as self.m = 1kg
-
-
-                        self.vx += math.cos(angle) * a
-                        self.vy += math.sin(angle) * a
-
-            if(self.x > MAP_WIDTH):
-                self.x = MAP_WIDTH
-                self.vx = - abs(self.vx * 0.5)
-
-            if(self.x < 0):
-                self.x = 0
-                self.vx = abs(self.vx * 0.5)
-
-            if(self.y > MAP_HEIGHT):
-                self.y = MAP_HEIGHT
-                self.vy = - abs(self.vy * 0.5)
-                
-            if(self.y < 0):
-                self.y = 0
-                self.vy = abs(self.vy * 0.5)
-
-
-            if keys[pygame.K_SPACE] and self.fuel > self.fuel_consumption:
-                self.thrust = True
-                self.fuel -= self.fuel_consumption
-                self.vx += math.cos(self.angle) * self.speed
-                self.vy += math.sin(self.angle) * self.speed
-
-            else:
-                self.thrust = False
-
-            self.x += self.vx/10
-            self.y += self.vy/10
-            self.distance += math.sqrt((self.vx/10)**2 + (self.vy/10)**2)
-
-
-        if(not self.throw) and self.calculating == False:
-
-            if (keys[pygame.K_SPACE] or keys[pygame.K_RETURN]) and self.fuel > self.fuel_consumption_throw:
-                self.throw = True
-                self.landing_count += 1 
-                self.fuel -= self.fuel_consumption_throw
-                self.vx = self.throw_speed * math.cos(self.angle)
-                self.vy = self.throw_speed * math.sin(self.angle)
-
-
-            elif keys[pygame.K_UP]:
-                self.calculating = True
-                self.pathdraw.clear()
-                self.accessible_planets = []
-                self.traj = Text("Calcul de trajectoire en cours...", SCREEN_HEIGHT/2, SCREEN_WIDTH/2, 100,relative=False, color=(255,255,255))
-                threading.Thread(target=self.Trajectory, args=(p.planet,)).start()
-
-            elif keys[pygame.K_s]:  # TEST ONLY
-                self.calculating = True
-                self.traj = Text("Calcul de trajectoire en cours...", SCREEN_HEIGHT/2, SCREEN_WIDTH/2, 100,relative=False, color=(255,255,255))
-                sd = Sondes(objects,self.sonde_number,self)
-                p.sonde = sd
-                threading.Thread(target=sd.run, args=()).start()
-
-            elif keys[pygame.K_c]:
-                self.accessible_planets = []
-                self.sonde = None
-
-            elif keys[pygame.K_m]:
-                self.map = not self.map
-                time.sleep(0.1)
-
-            elif keys[pygame.K_p]:
-                self.path = not self.path
-                time.sleep(0.1)
-
-
-        
-            mouseState = pygame.mouse.get_pressed()[0]
-
-            # wheel for zoom
-
-
-            if(mouseState and not self.oldMouseState):
-                self.oldMousePosition = pygame.mouse.get_pos()
-            
-            
-            if mouseState and not self.throw and not self.calculating and self.map:
+            if self.throw:
 
                 for i in objects:
+                    
+                    if(i != self.planet):
+                        dist = math.sqrt((i.getAbsoluteX() - self.x)**2 + (i.getAbsoluteY() - self.y)**2)
+                        
+                        if(dist < 30):
+                            self.x = i.getAbsoluteX()
+                            self.y = i.getAbsoluteY()
+                            self.vx = 0
+                            self.vy = 0
+                            self.throw = False
+                            self.planet = i
 
-                    if  i != self.planet and math.sqrt((self.oldMousePosition[0] - posX(i.x))**2 + (self.oldMousePosition[1] - posY(i.y))**2) < 20:
-                        self.selected_planet = i
+                        elif(dist != 0):
+                            dx = (i.getAbsoluteX() - self.x)
+                            dy = (i.getAbsoluteY() - self.y)
 
-                        for j in self.accessible_planets:
+                            angle = math.atan2(dy, dx)
 
-                            if j[0] == i:
-                                self.angle = j[1]
-                                break
-
-                        break
+                            a = 20000 * G / (dist**2)   # from F=ma and G=m1m2/r^2 as self.m = 1kg
 
 
-            if(mouseState):
-                pos = pygame.mouse.get_pos()
-                self.cursor[0] -= (pos[0] - self.oldMousePosition[0]) / self.zoom
-                self.cursor[1] -= (pos[1] - self.oldMousePosition[1]) / self.zoom
+                            self.vx += math.cos(angle) * a
+                            self.vy += math.sin(angle) * a
 
-                if(self.cursor[0] < 0):
-                    self.cursor[0] = 0
+                if(self.x > MAP_WIDTH):
+                    self.x = MAP_WIDTH
+                    self.vx = - abs(self.vx * 0.5)
 
-                if(self.cursor[0] > MAP_WIDTH - SCREEN_WIDTH):
-                    self.cursor[0] = MAP_WIDTH - SCREEN_WIDTH
+                if(self.x < 0):
+                    self.x = 0
+                    self.vx = abs(self.vx * 0.5)
 
-                if(self.cursor[1] < 0):
-                    self.cursor[1] = 0
+                if(self.y > MAP_HEIGHT):
+                    self.y = MAP_HEIGHT
+                    self.vy = - abs(self.vy * 0.5)
+                    
+                if(self.y < 0):
+                    self.y = 0
+                    self.vy = abs(self.vy * 0.5)
 
-                if(self.cursor[1] > MAP_HEIGHT - SCREEN_HEIGHT):
-                    self.cursor[1] = MAP_HEIGHT - SCREEN_HEIGHT
 
-            else:
+                if keys[pygame.K_SPACE] and self.fuel > self.fuel_consumption:
+                    self.thrust = True
+                    self.fuel -= self.fuel_consumption
+                    self.vx += math.cos(self.angle) * self.speed
+                    self.vy += math.sin(self.angle) * self.speed
+
+                else:
+                    self.thrust = False
+
+                self.x += self.vx/10
+                self.y += self.vy/10
+                self.distance += math.sqrt((self.vx/10)**2 + (self.vy/10)**2)
+
+
+            if(not self.throw) and self.calculating == False:
+
+                if (keys[pygame.K_SPACE] or keys[pygame.K_RETURN]) and self.fuel > self.fuel_consumption_throw:
+                    self.throw = True
+                    self.landing_count += 1 
+                    self.fuel -= self.fuel_consumption_throw
+                    self.vx = self.throw_speed * math.cos(self.angle)
+                    self.vy = self.throw_speed * math.sin(self.angle)
+
+
+                elif keys[pygame.K_UP]:
+                    self.calculating = True
+                    self.pathdraw.clear()
+                    self.accessible_planets = []
+                    self.traj = Text("Calcul de trajectoire en cours...", SCREEN_HEIGHT/2, SCREEN_WIDTH/2, 100,relative=False, color=(255,255,255))
+                    threading.Thread(target=self.Trajectory, args=(p.planet,)).start()
+
+                elif keys[pygame.K_s]:  # TEST ONLY
+                    self.calculating = True
+                    self.traj = Text("Calcul de trajectoire en cours...", SCREEN_HEIGHT/2, SCREEN_WIDTH/2, 100,relative=False, color=(255,255,255))
+                    sd = Sondes(objects,self.sonde_number,self)
+                    p.sonde = sd
+                    threading.Thread(target=sd.run, args=()).start()
+
+                elif keys[pygame.K_c]:
+                    self.accessible_planets = []
+                    self.sonde = None
+
+                elif keys[pygame.K_m]:
+                    self.map = not self.map
+                    time.sleep(0.1)
+
+                elif keys[pygame.K_p]:
+                    self.path = not self.path
+                    time.sleep(0.1)
+
+                elif keys[pygame.K_d]:
+                    self.debug = not self.debug
+                    time.sleep(0.1)
+            
+                mouseState = pygame.mouse.get_pressed()[0]
+
+                # wheel for zoom
+
+
+                if(mouseState and not self.oldMouseState):
+                    self.oldMousePosition = pygame.mouse.get_pos()
+                
+                
+                if mouseState and not self.throw and not self.calculating and self.map:
+
+                    for i in objects:
+
+                        if  i != self.planet and math.sqrt((self.oldMousePosition[0] - posX(i.x))**2 + (self.oldMousePosition[1] - posY(i.y))**2) < 20:
+                            self.selected_planet = i
+
+                            for j in self.accessible_planets:
+
+                                if j[0] == i:
+                                    self.angle = j[1]
+                                    break
+
+                            break
+
+
+                if(mouseState):
+                    pos = pygame.mouse.get_pos()
+                    self.cursor[0] -= (pos[0] - self.oldMousePosition[0]) / self.zoom
+                    self.cursor[1] -= (pos[1] - self.oldMousePosition[1]) / self.zoom
+
+                    if(self.cursor[0] < 0):
+                        self.cursor[0] = 0
+
+                    if(self.cursor[0] > MAP_WIDTH - SCREEN_WIDTH):
+                        self.cursor[0] = MAP_WIDTH - SCREEN_WIDTH
+
+                    if(self.cursor[1] < 0):
+                        self.cursor[1] = 0
+
+                    if(self.cursor[1] > MAP_HEIGHT - SCREEN_HEIGHT):
+                        self.cursor[1] = MAP_HEIGHT - SCREEN_HEIGHT
+
+                else:
+                    self.oldMousePosition = pygame.mouse.get_pos()
+
+                self.oldMouseState = mouseState
                 self.oldMousePosition = pygame.mouse.get_pos()
 
-            self.oldMouseState = mouseState
-            self.oldMousePosition = pygame.mouse.get_pos()
+            if(self.throw or pygame.mouse.get_pressed()[2]):
+                self.cursor = [self.x, self.y]
 
-        if(self.throw or pygame.mouse.get_pressed()[2]):
-            self.cursor = [self.x, self.y]
-
-        self.score = round(self.distance)
-        end = time.perf_counter() - start
-        update_fps.setText("PUS: " + str(int(1/end)))
-
+            self.score = round(self.distance)
+            end = time.perf_counter() - start
+            if p.debug:
+                update_fps.setText("PUS: " + str(round(1/end)))
+            else:
+                update_fps.setText("")
+            time.sleep(1/60)
 
 
 
@@ -492,8 +499,10 @@ class Sondes:
                 break
 
             end = time.perf_counter() - start
-            sonde_update.setText("SUS: " + str(int(1/end)))
-
+            if p.debug:
+                sonde_update.setText("SUS: " + str(round(1/end)))
+            else:
+                sonde_update.setText("")
 
         formated_arrivals = []
         formated_history = []
@@ -521,9 +530,9 @@ imagelune = Image(pygame.image.load("assets/moons/moon1.png"))
 
 mytext = Text("Fuel: ", SCREEN_WIDTH*0.05, SCREEN_HEIGHT*0.9, 50, relative=False, color=(255,255,255))
 score = Text("Score: ", SCREEN_WIDTH*0.05, SCREEN_HEIGHT*0.05, 50, relative=False, color=(255,255,255))
-fps_text = Text("FPS: ", SCREEN_WIDTH*0.05, SCREEN_HEIGHT*0.1, 50, relative=False, color=(255,255,255))
-update_fps = Text("PUS: 0", SCREEN_WIDTH*0.05, SCREEN_HEIGHT*0.2, 50, relative=False, color=(255,255,255))
-sonde_update = Text("SUS: 0", SCREEN_WIDTH*0.05, SCREEN_HEIGHT*0.15, 50, relative=False, color=(255,255,255))	
+fps_text = Text("", SCREEN_WIDTH*0.05, SCREEN_HEIGHT*0.1, 50, relative=False, color=(255,255,255))
+update_fps = Text("", SCREEN_WIDTH*0.05, SCREEN_HEIGHT*0.2, 50, relative=False, color=(255,255,255))
+sonde_update = Text("", SCREEN_WIDTH*0.05, SCREEN_HEIGHT*0.15, 50, relative=False, color=(255,255,255))	
 
 for i in range(PLANET_NUMBER):
     o = Object(random.randint(0, MAP_WIDTH), random.randint(0, MAP_WIDTH), 10)
@@ -541,7 +550,7 @@ for i in range(PLANET_NUMBER):
     objects.append(o)
 
 p = Player(objects[0])
-
+threading.Thread(target=p.update,args=()).start()
 
 
 
@@ -588,15 +597,17 @@ while True:
                     if len(path) >= 2:
                         points = np.column_stack((posX(path[:, 0]), posY(path[:, 1]))).astype(int)
                         pygame.draw.aalines(screen, (255, 255, 255), False, points)
-
-
     mytext.setText("Fuel: " + str(round(p.fuel,1)))
     score.setText("Score: " + str(p.score))
+
     
-    p.update()
+    
     p.draw()
     pygame.display.update()
-    pygame.time.Clock().tick(60)
     fps = time.perf_counter() - start
-
-    fps_text.setText("FPS: " + str(round(1/fps)))
+    if p.debug:
+        fps_text.setText("FPS: " + str(round(1/fps)))
+    else:
+        fps_text.setText("")
+        update_fps.setText("")
+        sonde_update.setText("")
