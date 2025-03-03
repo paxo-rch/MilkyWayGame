@@ -173,7 +173,7 @@ class Player:
         self.speed = 1
         self.turn_speed = 16
         self.throw_speed = 100
-        self.fuel = 100
+        self.fuel = 1000
         self.fuel_consumption = 0.1
         self.fuel_consumption_throw = 10
         self.projection_length = 100
@@ -313,13 +313,6 @@ class Player:
                 self.vx = self.throw_speed * math.cos(self.angle)
                 self.vy = self.throw_speed * math.sin(self.angle)
 
-
-            elif keys[pygame.K_UP]:
-                self.calculating = True
-                self.pathdraw.clear()
-                self.accessible_planets = []
-                self.traj = Text("Calcul de trajectoire en cours...", SCREEN_HEIGHT/2, SCREEN_WIDTH/2, 100,relative=False, color=(255,255,255))
-                threading.Thread(target=self.Trajectory, args=(p.planet,)).start()
 
             elif keys[pygame.K_s]:  # TEST ONLY
                 self.calculating = True
