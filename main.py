@@ -8,6 +8,9 @@ import socket
 import numpy as np
 import multiprocessing
 
+# custom libraries
+import planets
+
 G = 1
 
 MAP_SCALE = 10
