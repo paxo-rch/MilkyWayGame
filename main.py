@@ -185,7 +185,7 @@ class Player:
         self.distance = 0
         
         #Path settings
-        self.sonde_number = 45
+        self.sonde_number = 360
         self.path = True
         self.path_step = 1
         self.path_antialiasing = False
