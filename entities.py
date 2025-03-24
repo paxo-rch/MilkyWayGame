@@ -7,6 +7,8 @@ import threading
 from graphics import *
 import gui
 
+import ressources
+
 class Object:
     t = 0
     G = 1
@@ -93,6 +95,9 @@ class Player:
         self.thrust = False
         self.landing_count = 1
         self.distance = 0
+
+        #Ressources
+        self.ressources = {i: 0 for i in ressources.types}
         
         #Path settings
         self.sonde_number = 360

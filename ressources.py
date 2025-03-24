@@ -1,5 +1,17 @@
 from math import *
 
 types = [
-    "Coal",
+    "Chromites",
+    "Cratines",
+    "Chromium",
+    "Cranium",
+    "Charbonites",
+    "Charbonium",
+    "Meganites",
+    "Meganium",
+    "Ultranium",
 ]
+
+icons = {
+    "Chromites": "",
+}

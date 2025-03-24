@@ -15,7 +15,7 @@ import gui
 import graphics
 
 PLANET_NUMBER = 500
-MOON_NUMBER = 5
+MOON_NUMBER = 3
 
 
 fps = 0
@@ -35,6 +35,8 @@ sonde_time = graphics.Text("", graphics.SCREEN_WIDTH*0.05, graphics.SCREEN_HEIGH
 
 for i in range(PLANET_NUMBER):
     type = random.choice(planets.Planet.types)
+
+
     multiplier = random.randint(1, 2)
 
     reference = planets.Planet(random.randint(0, graphics.MAP_WIDTH), random.randint(0, graphics.MAP_WIDTH), type, entities.Object.objects, multiplier)

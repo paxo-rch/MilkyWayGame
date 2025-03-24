@@ -4,8 +4,13 @@ import ressources
 
 class Planet:
     types = [
-        "Kansan",
-        "Water"
+        "earth": 1,
+        "norturn": 2,
+        "jadea": 3,
+        "nimboria": 4,
+        "annelius": 5,
+        "dorion": 6,
+        "sucrelune": 7,
     ]
 
     ressources = {}
@@ -22,34 +27,3 @@ class Planet:
             self.ressources[ressource] *= ressource_multiplier
 
         self.icon = Planet.ressources[type]["icon"]
-
-
-Planet.ressources["Kansan"] = {
-    "ressources": {
-        "Coal": 1,
-        "Silicium": 1,
-        "Lava": 20,
-        "Water": 0
-    },
-    "icon": "assets/planets/planet1.png"
-}
-
-Planet.ressources["Water"] = {
-    "ressources": {
-        "Coal": 1,
-        "Silicium": 5,
-        "Lava": 0,
-        "Water": 20,
-    },
-    "icon": "assets/planets/planet2.png"
-}
-
-Planet.ressources["Stone"] = {
-    "ressources": {
-        "Coal": 10,
-        "Silicium": 5,
-        "Lava": 0,
-        "Water": 0,
-    },
-    "icon": "assets/planets/planet3.png"
-}
