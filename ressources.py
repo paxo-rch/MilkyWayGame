@@ -4,14 +4,12 @@ import random
 
 types = [
     "Chromites",
-    "Cratines",
     "Chromium",
-    "Cranium",
     "Charbonites",
     "Charbonium",
     "Meganites",
     "Meganium",
-    "Ultranium",
+    "Ultranium"
 ]
 
 icons = {
