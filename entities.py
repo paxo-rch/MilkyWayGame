@@ -25,6 +25,8 @@ class Object:
         self.transparent = False
         self.parent = None
         self.children = []
+        self.reference = None
+        self.rotation = random.random() * 2 * math.pi
 
 
     def setParent(self, parent, orbit_radius):
@@ -39,8 +41,17 @@ class Object:
     def draw(self):
         x,y = posX(self.x), posY(self.y)
 
-        if self.image.scaled_image is not None:
-            screen.blit(self.image.scaled_image,(x-(self.image.image.get_height()/2)*player.zoom*self.image.scale,y-(self.image.image.get_width()/2)*player.zoom*self.image.scale))
+        if self.parent is not None:
+            if self.image.scaled_image is not None:
+                rotated_image = pygame.transform.rotate(self.image.scaled_image, math.degrees(self.rotation))
+                screen.blit(rotated_image, (x-rotated_image.get_width()/2, y-rotated_image.get_height()/2))
+        
+        elif self.reference is not None:
+            self.reference.icon
+            rotated_image = pygame.transform.rotate(self.reference.icon.scaled_image, math.degrees(self.rotation))
+            screen.blit(rotated_image,
+                        (x-rotated_image.get_width()/2,
+                         y-rotated_image.get_height()/2))
 
         if not self.transparent:
             pygame.draw.circle(screen, (255, 255, 255), (x, y), self.r * player.zoom)

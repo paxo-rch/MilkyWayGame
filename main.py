@@ -13,10 +13,12 @@ import planets
 import entities
 import gui
 import graphics
+import ressources
 
 PLANET_NUMBER = 500
 MOON_NUMBER = 3
 
+planets.Planet.load_planets()
 
 fps = 0
 
@@ -34,14 +36,31 @@ sonde_update = graphics.Text("", graphics.SCREEN_WIDTH*0.05, graphics.SCREEN_HEI
 sonde_time = graphics.Text("", graphics.SCREEN_WIDTH*0.05, graphics.SCREEN_HEIGHT*0.25, 50, relative=False, color=(255,255,255))
 
 for i in range(PLANET_NUMBER):
-    type = random.choice(planets.Planet.types)
+    types = list(planets.Planet.types.keys())
 
+    
+    pad = random.random() * 100
+    prob = [25, 25, 9, 15, 15, 10, 1]
 
-    multiplier = random.randint(1, 2)
+    r = random.random() * sum(prob)
+    for i in range(len(prob)):
+        if r < prob[i]:
+            type = types[i]
+            break
+        r -= prob[i]
 
-    reference = planets.Planet(random.randint(0, graphics.MAP_WIDTH), random.randint(0, graphics.MAP_WIDTH), type, entities.Object.objects, multiplier)
+    reference = planets.Planet(
+         random.randint(0, graphics.MAP_WIDTH), # x
+         random.randint(0, graphics.MAP_WIDTH), # y
+         type,                                  # type
+         entities.Object.objects,               # object linked
+         ressources.generate_ressources(type))                            # ressources dictionnary
 
-    o = entities.Object(random.randint(0, graphics.MAP_WIDTH), random.randint(0, graphics.MAP_WIDTH), multiplier)
+    o = entities.Object(
+         random.randint(0, graphics.MAP_WIDTH),
+         random.randint(0, graphics.MAP_WIDTH),
+         1) # mass
+    
     o.image = imageplanete
     o.transparent = True
     o.reference = reference
@@ -82,6 +101,8 @@ while True:
     for i in graphics.Image.imagelist:
         i.update()
 
+    planets.Planet.update_images()
+
     for i in entities.Object.objects:
         i.updateAll()
         i.drawAll()
@@ -95,7 +116,7 @@ while True:
     for i in graphics.Text.textlist:
         i.update()
 
-
+    
 
     if entities.player.sonde is not None:
             for i in entities.player.sonde.sonde_history:
