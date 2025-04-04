@@ -80,7 +80,7 @@ entities.player = graphics.player
 threading.Thread(target=entities.player.update,args=()).start()
 
 
-
+planets.Planet.update_images()
 
 while True:
     start = time.perf_counter()
@@ -91,17 +91,15 @@ while True:
             quit()
 
         if event.type == pygame.MOUSEWHEEL:
-                
-                if entities.player.zoom* ((event.y*0.2) +1) < 6 and entities.player.zoom* ((event.y*0.2) +1) > 0.1:
-                    entities.player.zoom *= (event.y)*0.2 + 1
+            if entities.player.zoom* ((event.y*0.2) +1) < 6 and entities.player.zoom* ((event.y*0.2) +1) > 0.1:
+                entities.player.zoom *= (event.y)*0.2 + 1
+                planets.Planet.update_images()
 
     graphics.screen.fill((0, 0, 0))
     entities.Object.time()
 
     for i in graphics.Image.imagelist:
         i.update()
-
-    planets.Planet.update_images()
 
     for i in entities.Object.objects:
         i.updateAll()

@@ -41,6 +41,9 @@ class Object:
     def draw(self):
         x,y = posX(self.x), posY(self.y)
 
+        if(x + self.r * player.zoom < 0 or x - self.r * player.zoom > MAP_WIDTH or y + self.r * player.zoom < 0 or y - self.r * player.zoom > MAP_HEIGHT):
+            return
+
         if self.parent is not None:
             if self.image.scaled_image is not None:
                 rotated_image = pygame.transform.rotate(self.image.scaled_image, math.degrees(self.rotation))
