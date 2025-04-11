@@ -106,23 +106,23 @@ while True:
         i.drawAll()
 
         if entities.player.map:
-            pygame.draw.circle(graphics.screen, (255, 0, 0), (graphics.posX(i.x), graphics.posY(i.y)), 20 * entities.player.zoom)
-
+            
+            
+            
+            accessed = False
+            for j in entities.player.accessible_planets:
+                    if j[0] == i:
+                        accessed = True
+                        pygame.draw.circle(graphics.screen, (0, 255, 0), (graphics.posX(i.x), graphics.posY(i.y)), 20 * entities.player.zoom)
+                        break
             if i == entities.player.selected_planet:
                 pygame.draw.circle(graphics.screen, (0, 0, 255), (graphics.posX(i.x), graphics.posY(i.y)), 20 * entities.player.zoom)
-
+            elif not accessed:
+                pygame.draw.circle(graphics.screen, (255, 0, 0), (graphics.posX(i.x), graphics.posY(i.y)), 20 * entities.player.zoom)
     for i in graphics.Text.textlist:
         i.update()
 
-    
 
-    if entities.player.sonde is not None:
-            for i in entities.player.sonde.sonde_history:
-                    path = i[:entities.player.sonde.steps]
-                    if len(path) >= 2:
-                        points = np.column_stack((graphics.posX(path[:, 0]), graphics.posY(path[:, 1]))).astype(int)
-                        if entities.player.path:
-                            pygame.draw.aalines(graphics.screen, (255, 255, 255), False, points)
     mytext.setText("Fuel: " + str(round(entities.player.fuel,1)))
     score.setText("Score: " + str(entities.player.score))
     if entities.player.debug:

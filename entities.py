@@ -261,10 +261,6 @@ class Player:
                     self.map = not self.map
                     time.sleep(0.1)
 
-                elif keys[pygame.K_p]:
-                    self.path = not self.path
-                    time.sleep(0.1)
-
                 elif keys[pygame.K_d]:
                     self.debug = not self.debug
                     time.sleep(0.1)
@@ -279,17 +275,24 @@ class Player:
                 
                 
                 if mouseState and not self.throw and not self.calculating and self.map:
+                    
+                    click_pos_screen = self.oldMousePosition 
 
                     for i in Object.objects:
+                        planet_screen_x, planet_screen_y = posX(i.x), posY(i.y)
+                        click_dist_sq = (click_pos_screen[0] - planet_screen_x)**2 + (click_pos_screen[1] - planet_screen_y)**2
+                        
+                        click_radius = max(20, i.r * self.zoom * 1.5) 
 
-                        if  i != self.planet and math.sqrt((self.oldMousePosition[0] - posX(i.x))**2 + (self.oldMousePosition[1] - posY(i.y))**2) < 20:
+                        if i != self.planet and click_dist_sq < click_radius**2:
                             self.selected_planet = i
 
-                            for j in self.accessible_planets:
-
-                                if j[0] == i:
-                                    self.angle = j[1]
-                                    break
+                            found_accessible = False
+                            for accessible_planet, launch_angle in self.accessible_planets: 
+                                if accessible_planet == i:
+                                    self.angle = launch_angle
+                                    found_accessible = True
+                                    break 
 
                             break
 
@@ -371,72 +374,131 @@ class Sondes:
 
     def run(self):
         s_time = time.perf_counter()
+        # Keep track of which sondes have reached which planets to avoid duplicates
+        # Use a dictionary: {planet_object: (sonde_index, steps, angle)}
+        first_arrivals_data = {} 
+        
+        active_sondes = np.ones(self.n, dtype=bool) # Keep track of active sondes
+
         while True:
             start = time.perf_counter()
-            diff = self.pos[:, np.newaxis, :] - self.planets[np.newaxis, :, :]
-            dist = np.linalg.norm(diff, axis=-1)    # (n, planets) -> distance
 
-            comp = np.where(np.any(dist < 30, axis=1), 0, 1)[:, None]
+            current_active_indices = np.where(active_sondes)[0]
+            if len(current_active_indices) == 0: 
+                 break
+                 
+            active_pos = self.pos[active_sondes]
+            active_spe = self.spe[active_sondes]
+            diff = active_pos[:, np.newaxis, :] - self.planets[np.newaxis, :, :]
+            dist = np.linalg.norm(diff, axis=-1) 
+
+            collision_mask = dist < 30 
             
-            mask = dist < 30  # shape: (n, number_of_planets)
-            planet_reached = np.any(mask, axis=0)  # shape: (number_of_planets,)
-            not_arrived = self.arrivals[:, 0] == -1
-            to_record = planet_reached & not_arrived
+            collided_sondes_indices_local = np.where(np.any(collision_mask, axis=1))[0]
 
-            if np.any(to_record):
-                first_sonde_ids = np.argmax(mask, axis=0)  # shape: (number_of_planets,)
-                self.arrivals[to_record, 0] = first_sonde_ids[to_record]    # sonde id
-                self.arrivals[to_record, 1] = self.steps
+            if len(collided_sondes_indices_local) > 0:
+                collided_sondes_indices_global = current_active_indices[collided_sondes_indices_local]
 
-            self.spe -= Object.G * (diff / dist[:, :, np.newaxis] ** 3).sum(axis=1) * 20000
-            self.spe *= comp
+                planets_hit_indices = np.argmax(collision_mask[collided_sondes_indices_local], axis=1)
 
-            # Check if the sonde is out of the map, if yes, v <- -v/2 (v is spe)
-            mask_right = self.pos[:, 0] > MAP_WIDTH
-            mask_left = self.pos[:, 0] < 0
-            mask_bottom = self.pos[:, 1] > MAP_HEIGHT
-            mask_top = self.pos[:, 1] < 0
+                for i, sonde_global_idx in enumerate(collided_sondes_indices_global):
+                    planet_hit_idx = planets_hit_indices[i]
+                    planet_obj = self.planet_copy[planet_hit_idx]
 
-            self.spe[mask_right, 0] = -np.abs(self.spe[mask_right, 0]) / 2
-            self.spe[mask_left, 0] = np.abs(self.spe[mask_left, 0]) / 2
-            self.spe[mask_bottom, 1] = -np.abs(self.spe[mask_bottom, 1]) / 2
-            self.spe[mask_top, 1] = np.abs(self.spe[mask_top, 1]) / 2
+                    if planet_obj not in first_arrivals_data:
+                         launch_angle = sonde_global_idx * 2 * math.pi / self.n
+                         first_arrivals_data[planet_obj] = (sonde_global_idx, self.steps, launch_angle)
+                         if self.parent is not None:
+                             self.position_history[sonde_global_idx, :, self.steps] = self.pos[sonde_global_idx]
 
-            self.position_history[:,:,self.steps] = self.pos
 
-            self.pos += self.spe/10
+                    active_sondes[sonde_global_idx] = False
 
+           
+            current_active_indices = np.where(active_sondes)[0]
+            if len(current_active_indices) == 0:
+                 break 
+
+            active_pos = self.pos[active_sondes]
+            active_spe = self.spe[active_sondes]
             
-            if self.parent != None: 
-                self.sonde_history = np.transpose(self.position_history,(0,2,1))
+            diff = active_pos[:, np.newaxis, :] - self.planets[np.newaxis, :, :]
+            dist = np.linalg.norm(diff, axis=-1) + 1e-9 
+
+            accel = -Object.G * 20000 * (diff / dist[:, :, np.newaxis] ** 3).sum(axis=1)
             
+            active_spe += accel
+
+            mask_right = active_pos[:, 0] > MAP_WIDTH
+            mask_left = active_pos[:, 0] < 0
+            mask_bottom = active_pos[:, 1] > MAP_HEIGHT
+            mask_top = active_pos[:, 1] < 0
+
+            active_spe[mask_right, 0] = -np.abs(active_spe[mask_right, 0]) * 0.5
+            active_spe[mask_left, 0] = np.abs(active_spe[mask_left, 0]) * 0.5
+            active_spe[mask_bottom, 1] = -np.abs(active_spe[mask_bottom, 1]) * 0.5
+            active_spe[mask_top, 1] = np.abs(active_spe[mask_top, 1]) * 0.5
+            
+            # --- Store History & Update Position for active sondes ---
+            # Store position history *before* updating position for this step
+            if self.parent is not None and self.steps < self.position_history.shape[2]:
+                 self.position_history[active_sondes, :, self.steps] = active_pos
+
+            active_pos += active_spe / 10 # Update position
+
+            # --- Update global arrays ---
+            self.pos[active_sondes] = active_pos
+            self.spe[active_sondes] = active_spe
+
             self.steps += 1
 
-            if(comp.sum() == 0 or self.steps > 10000):
+            # --- Exit Conditions ---
+            # Exit if max steps reached or no sondes left active
+            if self.steps >= self.position_history.shape[2]:
+                print("Sonde simulation reached max steps.")
+                break
+            if not np.any(active_sondes):
+                # print(f"All sondes deactivated after {self.steps} steps.")
                 break
 
+
             end = time.perf_counter() - start
-            if self.parent != None and self.parent.debug:
-                gui.sonde_update.setText("SUS: " + str(round(1/end)))
-            else:
-                gui.sonde_update.setText("")
+            if self.parent is not None and self.parent.debug:
+                gui.sonde_update.setText("SUS: " + str(round(1/end)) if end > 0 else "SUS: inf")
+            # Removed the else clause to keep the text if debug is turned off during calculation
 
-        formated_arrivals = []
-        formated_history = []
+        # --- Post-processing ---
+        formated_arrivals_list = []
+        formated_history_list = []
 
-        if self.parent != None:
-            self.parent.calculating = False
-            gui.textlist.remove(self.parent.traj)
+        # Ensure history array is correctly sliced and transposed only for relevant sondes
+        successful_sonde_indices = []
+        for planet_obj, data in first_arrivals_data.items():
+            sonde_idx, arrival_step, angle = data
+            formated_arrivals_list.append((planet_obj, angle)) # Store only (planet, angle)
+            successful_sonde_indices.append(sonde_idx)
+            
+        # Prepare history only for sondes that actually hit something recorded
+        if self.parent is not None and len(successful_sonde_indices) > 0:
+             # Get history up to the maximum arrival step found + buffer, or max steps
+             max_hist_step = self.steps
+             # Slice history for successful sondes up to max_hist_step
+             relevant_history = self.position_history[successful_sonde_indices, :, :max_hist_step]
+             # Transpose to (sonde, step, xy)
+             self.parent.sonde_history = np.transpose(relevant_history, (0, 2, 1))
+        elif self.parent is not None:
+             self.parent.sonde_history = np.array([]) # No successful sondes
 
-        for i,v in enumerate(self.arrivals):
-
-            if v[0] != -1:
-                formated_arrivals.append((self.planet_copy[int(v[0])],v[1],v[0]*2*math.pi/self.n))
-                formated_history.append(self.position_history[int(v[0]),:,:])
-        if self.parent != None and self.parent.debug:
-            gui.sonde_time.setText("Recon Time: " + str(round(time.perf_counter() - s_time)))
-        else:
-            gui.sonde_update.setText("")
-        formated_history = np.transpose(formated_history,(0,2,1))
-        return (formated_arrivals, formated_history) # each row is a sonde that reached a planet first, (planet, arrival_time, angle)
-                        # ATTENTION: l'historique est en format [ [[x,x,x,x,x,x,x],[y,y,y,y,y,y,y]], [[x,x,x,x,x,x,x],[y,y,y,y,y,y,y]] ...]
+        # Update parent player state *after* all calculations
+        if self.parent is not None:
+            self.parent.accessible_planets = formated_arrivals_list # Update the player's list
+            self.parent.traj.setText("")
+            if self.parent.traj in gui.textlist: # Check if text exists before removing
+                 gui.textlist.remove(self.parent.traj)
+            self.parent.calculating = False # Signal completion
+            if self.parent.debug:
+                gui.sonde_time.setText("Recon Time: " + str(round(time.perf_counter() - s_time, 3)))
+            else: # Clear debug texts if debug is off
+                 gui.sonde_time.setText("")
+                 gui.sonde_update.setText("")
+                 
