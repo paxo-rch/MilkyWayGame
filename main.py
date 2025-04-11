@@ -23,7 +23,7 @@ planets.Planet.load_planets()
 fps = 0
 
 imagelist = []
-imageRessources = {}
+textRessources = {}
 textlist = []
 path_list = []
 imageplanete = graphics.Image(pygame.image.load("assets/planets/planet1.png"),scale=0.1)
@@ -40,9 +40,10 @@ for id, i in enumerate(ressources.types):
     icon = ressources.icons[i]
     if icon != "":
         img = graphics.Image(pygame.transform.scale(pygame.image.load(icon), (50, 50)),scale=0.1,fixed=True, x = 0, y = 50 * id)
-        imageRessources[i] = img
         imagelist.append(img)
-        textlist.append(graphics.Text(i + ": ", 50, 50 * id + 10, 40, relative=False, color=(150,150,150)))
+        txt = graphics.Text(i + ": ", 50, 50 * id + 10, 40, relative=False, color=(150,150,150))
+        textlist.append(txt)
+        textRessources.append(txt)
 
 for i in range(PLANET_NUMBER):
     types = list(planets.Planet.types.keys())
