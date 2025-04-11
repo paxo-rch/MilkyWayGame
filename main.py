@@ -23,17 +23,26 @@ planets.Planet.load_planets()
 fps = 0
 
 imagelist = []
+imageRessources = {}
 textlist = []
 path_list = []
 imageplanete = graphics.Image(pygame.image.load("assets/planets/planet1.png"),scale=0.1)
 imagelune = graphics.Image(pygame.image.load("assets/moons/moon1.png"))
 
-mytext = graphics.Text("Fuel: ", graphics.SCREEN_WIDTH*0.05, graphics.SCREEN_HEIGHT*0.9, 50, relative=False, color=(255,255,255))
-score = graphics.Text("Score: ", graphics.SCREEN_WIDTH*0.05, graphics.SCREEN_HEIGHT*0.05, 50, relative=False, color=(255,255,255))
-fps_text = graphics.Text("", graphics.SCREEN_WIDTH*0.05, graphics.SCREEN_HEIGHT*0.1, 50, relative=False, color=(255,255,255))
-update_fps = graphics.Text("", graphics.SCREEN_WIDTH*0.05, graphics.SCREEN_HEIGHT*0.2, 50, relative=False, color=(255,255,255))
-sonde_update = graphics.Text("", graphics.SCREEN_WIDTH*0.05, graphics.SCREEN_HEIGHT*0.15, 50, relative=False, color=(255,255,255))	
-sonde_time = graphics.Text("", graphics.SCREEN_WIDTH*0.05, graphics.SCREEN_HEIGHT*0.25, 50, relative=False, color=(255,255,255))
+mytext = graphics.Text("Fuel: ", graphics.SCREEN_WIDTH*0.05, graphics.SCREEN_HEIGHT*0.9, 50, relative=False, color=(150,150,150))
+score = graphics.Text("Score: ", graphics.SCREEN_WIDTH*0.05, graphics.SCREEN_HEIGHT*0.05, 50, relative=False, color=(150,150,150))
+fps_text = graphics.Text("", graphics.SCREEN_WIDTH*0.05, graphics.SCREEN_HEIGHT*0.1, 50, relative=False, color=(150,150,150))
+update_fps = graphics.Text("", graphics.SCREEN_WIDTH*0.05, graphics.SCREEN_HEIGHT*0.2, 50, relative=False, color=(150,150,150))
+sonde_update = graphics.Text("", graphics.SCREEN_WIDTH*0.05, graphics.SCREEN_HEIGHT*0.15, 50, relative=False, color=(150,150,150))	
+sonde_time = graphics.Text("", graphics.SCREEN_WIDTH*0.05, graphics.SCREEN_HEIGHT*0.25, 50, relative=False, color=(150,150,150))
+
+for id, i in enumerate(ressources.types):
+    icon = ressources.icons[i]
+    if icon != "":
+        img = graphics.Image(pygame.transform.scale(pygame.image.load(icon), (50, 50)),scale=0.1,fixed=True, x = 0, y = 50 * id)
+        imageRessources[i] = img
+        imagelist.append(img)
+        textlist.append(graphics.Text(i + ": ", 50, 50 * id + 10, 40, relative=False, color=(150,150,150)))
 
 for i in range(PLANET_NUMBER):
     types = list(planets.Planet.types.keys())
@@ -117,14 +126,16 @@ while True:
     
 
     if entities.player.sonde is not None:
-            for i in entities.player.sonde.sonde_history:
-                    path = i[:entities.player.sonde.steps]
-                    if len(path) >= 2:
-                        points = np.column_stack((graphics.posX(path[:, 0]), graphics.posY(path[:, 1]))).astype(int)
-                        if entities.player.path:
-                            pygame.draw.aalines(graphics.screen, (255, 255, 255), False, points)
+        for i in entities.player.sonde.sonde_history:
+            path = i[:entities.player.sonde.steps]
+            if len(path) >= 2:
+                points = np.column_stack((graphics.posX(path[:, 0]), graphics.posY(path[:, 1]))).astype(int)
+                if entities.player.path:
+                    pygame.draw.aalines(graphics.screen, (255, 255, 255), False, points)
+    
     mytext.setText("Fuel: " + str(round(entities.player.fuel,1)))
     score.setText("Score: " + str(entities.player.score))
+    
     if entities.player.debug:
         fps_text.setText("FPS: " + str(round(1/fps)))
     else:
@@ -134,7 +145,10 @@ while True:
         sonde_time.setText("")
     
     entities.player.draw()
-    time.sleep(1/60)
+
+    clock = pygame.time.Clock()
+    clock.tick(60)
+
     pygame.display.update()
     fps = time.perf_counter() - start
     
