@@ -56,14 +56,21 @@ class Text:
 class Image:
     imagelist = []
 
-    def __init__(self,image,scale=0.05):
+    def __init__(self,image,scale=0.05,fixed=False,x=0,y=0):
+        self.x = x
+        self.y = y
+        self.fixed = fixed
         self.scale = scale
         self.image = image
         self.scaled_image = None
         Image.imagelist.append(self)
 
 
-    def update(self):        
+    def update(self):
+        if(self.fixed):
+            screen.blit(self.image, (self.x,self.y))
+            return
+        
         if self.image is not None:
             self.scaled_image = pygame.transform.scale(self.image,(self.image.get_width()*player.zoom*self.scale,self.image.get_height()*player.zoom*self.scale))
 
