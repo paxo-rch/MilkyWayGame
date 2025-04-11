@@ -21,7 +21,7 @@ class Planet:
         "jadea": "assets/planets/planet3.png",
         "nimboria": "assets/planets/planet4.png",
         "annelius": "assets/planets/planet5.png",
-        "dorion": "assets/planets/planet6.jpeg",
+        "dorion": "assets/planets/planet6.png",
         "sucrelune": "assets/planets/planet7.png",
     }
 
