@@ -246,6 +246,7 @@ class Player:
                     self.vx = self.throw_speed * math.cos(self.angle)
                     self.vy = self.throw_speed * math.sin(self.angle)
 
+
                 elif keys[pygame.K_s] and self.calculating == False:
                     self.calculating = True
                     self.traj = Text("Calcul de trajectoire en cours...", SCREEN_HEIGHT/2, SCREEN_WIDTH/2, 100,relative=False, color=(255,255,255))
@@ -287,11 +288,9 @@ class Player:
                         if i != self.planet and click_dist_sq < click_radius**2:
                             self.selected_planet = i
 
-                            found_accessible = False
                             for accessible_planet, launch_angle in self.accessible_planets: 
                                 if accessible_planet == i:
                                     self.angle = launch_angle
-                                    found_accessible = True
                                     break 
 
                             break
@@ -339,6 +338,7 @@ class Sondes:
     def __init__(self,planets,n,parent=None):
         self.n = n
         self.parent = parent
+        print(self.parent.x, self.parent.y)
         self.pos = np.zeros((n,2))   # positions of objects
         self.pos[:,0] = self.parent.x # set all sondes to player position
         self.pos[:,1] = self.parent.y
