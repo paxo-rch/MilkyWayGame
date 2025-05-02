@@ -36,6 +36,14 @@ update_fps = graphics.Text("", graphics.SCREEN_WIDTH*0.05, graphics.SCREEN_HEIGH
 sonde_update = graphics.Text("", graphics.SCREEN_WIDTH*0.05, graphics.SCREEN_HEIGHT*0.15, 50, relative=False, color=(150,150,150))	
 sonde_time = graphics.Text("", graphics.SCREEN_WIDTH*0.05, graphics.SCREEN_HEIGHT*0.25, 50, relative=False, color=(150,150,150))
 
+for id, i in enumerate(ressources.types):
+    icon = ressources.icons[i]
+    if icon != "":
+        img = graphics.Image(pygame.transform.scale(pygame.image.load(icon), (50, 50)),scale=0.1,fixed=True, x = 0, y = 50 * id)
+        imageRessources[i] = img
+        imagelist.append(img)
+        textlist.append(graphics.Text(i + ": ", 50, 50 * id + 10, 40, relative=False, color=(150,150,150)))
+
 for i in range(PLANET_NUMBER):
     types = list(planets.Planet.types.keys())
 
@@ -94,7 +102,7 @@ def update_ressources_box():
         txt.setText(ressources.types[i] + ": " + str(graphics.player.ressources[ressources.types[i]]))
 
 planets.Planet.update_images()
-
+clock = pygame.time.Clock()
 while True:
     start = time.perf_counter()
     for event in pygame.event.get():
@@ -148,8 +156,8 @@ while True:
     
     entities.player.draw()
 
-    clock = pygame.time.Clock()
-    clock.tick(60)
+    
+    clock.tick(165)
 
     pygame.display.update()
     fps = time.perf_counter() - start
