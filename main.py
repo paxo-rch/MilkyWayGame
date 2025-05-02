@@ -23,7 +23,7 @@ planets.Planet.load_planets()
 fps = 0
 
 imagelist = []
-imageRessources = {}
+textRessources = []
 textlist = []
 path_list = []
 imageplanete = graphics.Image(pygame.image.load("assets/planets/planet1.png"),scale=0.1)
@@ -36,18 +36,9 @@ update_fps = graphics.Text("", graphics.SCREEN_WIDTH*0.05, graphics.SCREEN_HEIGH
 sonde_update = graphics.Text("", graphics.SCREEN_WIDTH*0.05, graphics.SCREEN_HEIGHT*0.15, 50, relative_coords=False,relative_zoom=False, color=(150,150,150))	
 sonde_time = graphics.Text("", graphics.SCREEN_WIDTH*0.05, graphics.SCREEN_HEIGHT*0.25, 50, relative_coords=False,relative_zoom=False, color=(150,150,150))
 
-for id, i in enumerate(ressources.types):
-    icon = ressources.icons[i]
-    '''if icon != "":
-        img = graphics.Image(pygame.transform.scale(pygame.image.load(icon), (50, 50)),scale=0.1,fixed=True, x = 0, y = 50 * id)
-        imageRessources[i] = img
-        imagelist.append(img)
-        textlist.append(graphics.Text(i + ": ", 50, 50 * id + 10, 40, relative=False, color=(150,150,150)))'''
-
 for i in range(PLANET_NUMBER):
     types = list(planets.Planet.types.keys())
 
-    
     pad = random.random() * 100
     prob = [25, 25, 9, 15, 15, 10, 1]
 
@@ -88,6 +79,18 @@ graphics.player = entities.Player(entities.Object.objects[0])
 entities.player = graphics.player
 threading.Thread(target=entities.player.update,args=()).start()
 
+for id, i in enumerate(ressources.types):
+    icon = ressources.icons[i]
+    if icon != "":
+        img = graphics.Image(pygame.transform.scale(pygame.image.load(icon), (50, 50)),scale=0.1,fixed=True, x = 0, y = 50 * id)
+        imagelist.append(img)
+        txt = graphics.Text(i + ": " + str(int(graphics.player.ressources[i])), 50, 50 * id + 10, 40, relative=False, color=(150,150,150))
+        textlist.append(txt)
+        textRessources.append(txt)
+
+def update_ressources_box():
+    for i,txt in enumerate(textRessources):
+        txt.setText(ressources.types[i] + ": " + str(int(graphics.player.ressources[ressources.types[i]])))
 
 planets.Planet.update_images()
 clock = pygame.time.Clock()
@@ -108,14 +111,16 @@ while True:
     graphics.screen.fill((0, 0, 0))
     entities.Object.time()
 
+    update_ressources_box()
+
+    for i in graphics.Image.imagelist:
+        i.update()
+
     for i in entities.Object.objects:
         i.updateAll()
         i.drawAll()
 
         if entities.player.map:
-            
-            
-            
             accessed = False
             for j in entities.player.accessible_planets:
                     if j[0] == i:
@@ -134,7 +139,8 @@ while True:
     for i in graphics.Text.textlist:
         i.update()
 
-    mytext.setText("Fuel: " + str(round(entities.player.fuel,1)))
+
+    mytext.setText("Fuel: " + str(round(entities.player.ressources["Charbonites"],1)))
     score.setText("Score: " + str(entities.player.score))
     
     if entities.player.debug:
