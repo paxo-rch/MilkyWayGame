@@ -84,7 +84,7 @@ for id, i in enumerate(ressources.types):
     if icon != "":
         img = graphics.Image(pygame.transform.scale(pygame.image.load(icon), (50, 50)),scale=0.1,fixed=True, x = 0, y = 50 * id)
         imagelist.append(img)
-        txt = graphics.Text(i + ": " + str(int(graphics.player.ressources[i])), 50, 50 * id + 10, 40, relative=False, color=(150,150,150))
+        txt = graphics.Text(i + ": " + str(int(graphics.player.ressources[i])), 50, 50 * id + 10, 40, relative_coords=False,relative_zoom=False, color=(150,150,150))
         textlist.append(txt)
         textRessources.append(txt)
 

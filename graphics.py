@@ -19,7 +19,7 @@ def posY(y):
     return SCREEN_HEIGHT//2 + (y - player.cursor[1]) * player.zoom
 class Box:
     boxlist = []
-    def __init__(self,x,y,size,relative_coords=True,relative_zoom=True,transparent_bg=False,transparent_border=False,border_color=(255,255,255),background_color=(255,255,255),border_radius=0,border_width=1):
+    def __init__(self,x,y,size,relative_coords=True,relative_zoom=True,transparent_bg=False,transparent_border=False,border_color=(255,255,255),background_color=(255,255,255),border_radius=0,border_width=1,master_object=None):
         self.relative_coords = relative_coords
         self.relative_zoom = relative_zoom
         self.x = x
@@ -31,8 +31,13 @@ class Box:
         self.background_color = background_color
         self.border_radius = border_radius
         self.border_width = border_width
+        self.master_object = master_object
+        if self.master_object != None:
+            self.coords_to_master = (master_object.x-self.x,master_object.y-self.y)
         Box.boxlist.append(self)
     def update(self):
+        if self.master_object != None:
+            self.x,self.y = (self.master_object.x-self.coords_to_master[0]/player.zoom,self.master_object.y-self.coords_to_master[1]/player.zoom)
         if self.relative_coords:
             x,y = (posX(self.x), posY(self.y))
         else:
@@ -57,9 +62,9 @@ class Box:
 class Text:
     textlist = []
 
-    def __init__(self, text, x, y, size, relative_coords=True, relative_zoom=True,color=(255,255,255)):
+    def __init__(self, text, x, y, size, relative_coords=True, relative_zoom=True,color=(255,255,255),master_object = None):
         self.font = pygame.font.SysFont(None, size)
-        self.text = text
+        self.text = str(text)
         self.color = color
         self.size = size
         self.relative_coords = relative_coords
@@ -67,11 +72,16 @@ class Text:
         self.render = self.font.render(self.text, True,pygame.Color(color[0],color[1],color[2]))
         self.x = x
         self.y = y
+        self.master_object = master_object
+        if self.master_object != None:
+            self.coords_to_master = (master_object.x-self.x,master_object.y-self.y)
         self.size = size
         Text.textlist.append(self)
 
 
     def update(self):
+        if self.master_object != None:
+            self.x,self.y = (self.master_object.x-self.coords_to_master[0]/player.zoom,self.master_object.y-self.coords_to_master[1]/player.zoom)
         if self.relative_zoom:
             self.font = pygame.font.SysFont(None, round(self.size*player.zoom+0.99))
         
@@ -89,7 +99,7 @@ class Text:
             self.render = self.font.render(self.text, True,pygame.Color(self.color[0],self.color[1],self.color[2]))
 
 
-    def remove(self):
+    def destroy(self):
         Text.textlist.remove(self)
 
 
@@ -115,5 +125,5 @@ class Image:
             self.scaled_image = pygame.transform.scale(self.image,(self.image.get_width()*player.zoom*self.scale,self.image.get_height()*player.zoom*self.scale))
 
 
-    def remove(self):
+    def destroy(self):
         Image.imagelist.remove(self)
