@@ -3,6 +3,7 @@ import math
 import random
 import time
 import threading
+import multiprocessing
 
 from graphics import *
 import gui
@@ -169,8 +170,8 @@ class Player:
 
 
     def update(self):
-        box = None
         clock = pygame.time.Clock()
+
         while True:
             start = time.perf_counter()
             keys = pygame.key.get_pressed()
@@ -239,7 +240,7 @@ class Player:
                 self.distance += math.sqrt((self.vx/10)**2 + (self.vy/10)**2)
 
 
-            else:
+            if(not self.throw):
 
                 if (keys[pygame.K_SPACE] or keys[pygame.K_RETURN]) and self.fuel > self.fuel_consumption_throw and self.calculating == False:
                     self.throw = True
@@ -252,7 +253,7 @@ class Player:
                 elif keys[pygame.K_s] and self.calculating == False:
                     self.calculating = True
                     self.traj = Text("Calcul de trajectoire en cours...", SCREEN_HEIGHT/2, SCREEN_WIDTH/2, 100,relative=False, color=(255,255,255))
-                    sd = Sondes(Object.objects,self.sonde_number,self)
+                    sd = Search(self.planet,self.selected_planet,self.throw_speed)
                     player.sonde = sd
                     threading.Thread(target=sd.run, args=()).start()
 
@@ -278,6 +279,7 @@ class Player:
                 
                 
                 if mouseState and not self.throw and not self.calculating and self.map:
+                    
                     click_pos_screen = self.oldMousePosition 
 
                     for i in Object.objects:
@@ -288,17 +290,14 @@ class Player:
 
                         if i != self.planet and click_dist_sq < click_radius**2:
                             self.selected_planet = i
-                            box = Box(i.x+20,i.y+20,(400,200),relative_zoom=False,border_radius=20,border_width=20,background_color=(60,60,60),border_color=(60,60,60))
-                            text = Text("Cool",i.x+20,i.y+20,20,relative_zoom=False)
+
                             for accessible_planet, launch_angle in self.accessible_planets: 
                                 if accessible_planet == i:
                                     self.angle = launch_angle
                                     break 
 
                             break
-                        elif box != None:
-                            box.destroy()
-                            box = None
+
 
                 if(mouseState):
                     pos = pygame.mouse.get_pos()
@@ -335,173 +334,68 @@ class Player:
                 gui.update_fps.setText("")
             
 
-
-
-class Sondes:
-
-    def __init__(self,planets,n,parent=None):
-        self.n = n
-        self.parent = parent
-        self.pos = np.zeros((n,2))   # positions of objects
-        self.pos[:,0] = self.parent.x # set all sondes to player position
-        self.pos[:,1] = self.parent.y
-        self.steps = 0
-        self.position_history = np.zeros((n,2,10000))
-
-        self.spe = np.zeros((n,2))   # speed of objects
-
-        for i in range(n):
-            self.spe[i] = [math.cos(i*2*math.pi/n),math.sin(i*2*math.pi/n)]
-
-        self.spe *= self.parent.throw_speed
-    
-        self.planet_copy = planets
-
-        for i in range(len(self.planet_copy)):
-
-            if(self.planet_copy[i] == self.parent.planet):
-                self.planet_copy = np.delete(self.planet_copy,i)
-                break
-        if self.parent != None:
-            self.sonde_history = np.zeros((n,10000, 2))
-
-        
-        self.planets = np.zeros((len(self.planet_copy),2))    # positions of planets
-        
-        self.arrivals = np.zeros((len(self.planet_copy),3))  # for each planet, (sonde id, arrival time, angle)  # angle not calculated during simulation
-        self.arrivals[:,0] = -1
-
-        for i in range(len(self.planet_copy)):
-            self.planets[i] = [self.planet_copy[i].x,self.planet_copy[i].y]
-
-
-    def run(self):
-        s_time = time.perf_counter()
-        # Keep track of which sondes have reached which planets to avoid duplicates
-        # Use a dictionary: {planet_object: (sonde_index, steps, angle)}
-        first_arrivals_data = {} 
-        
-        active_sondes = np.ones(self.n, dtype=bool) # Keep track of active sondes
-
+class Search:
+    def __init__(self,start,target,throw_speed):
+        self.target = target
+        self.start = start
+        self.throw_speed = throw_speed
+    def sonde(self,angle):
+        throw = False
+        x,y = self.start.getAbsoluteX(), self.start.getAbsoluteY()
+        start = time.perf_counter()
         while True:
-            start = time.perf_counter()
+            if throw:
+                for i in Object.objects:
+                    
+                    if(i != self.start):
+                        dist = math.sqrt((i.getAbsoluteX() - x)**2 + (i.getAbsoluteY() - y)**2)
+                        
+                        if(dist < 30):
+                            x = i.getAbsoluteX()
+                            y = i.getAbsoluteY()
+                            vx = 0
+                            vy = 0
+                            throw = False
+                            planet = i
+                            print(time.perf_counter()-start)
+                            return planet
 
-            current_active_indices = np.where(active_sondes)[0]
-            if len(current_active_indices) == 0: 
-                 break
-                 
-            active_pos = self.pos[active_sondes]
-            active_spe = self.spe[active_sondes]
-            diff = active_pos[:, np.newaxis, :] - self.planets[np.newaxis, :, :]
-            dist = np.linalg.norm(diff, axis=-1) 
+                        elif(dist != 0):
+                            dx = (i.getAbsoluteX() - x)
+                            dy = (i.getAbsoluteY() - y)
 
-            collision_mask = dist < 30 
-            
-            collided_sondes_indices_local = np.where(np.any(collision_mask, axis=1))[0]
+                            angle = math.atan2(dy, dx)
 
-            if len(collided_sondes_indices_local) > 0:
-                collided_sondes_indices_global = current_active_indices[collided_sondes_indices_local]
-
-                planets_hit_indices = np.argmax(collision_mask[collided_sondes_indices_local], axis=1)
-
-                for i, sonde_global_idx in enumerate(collided_sondes_indices_global):
-                    planet_hit_idx = planets_hit_indices[i]
-                    planet_obj = self.planet_copy[planet_hit_idx]
-
-                    if planet_obj not in first_arrivals_data:
-                         launch_angle = sonde_global_idx * 2 * math.pi / self.n
-                         first_arrivals_data[planet_obj] = (sonde_global_idx, self.steps, launch_angle)
-                         if self.parent is not None:
-                             self.position_history[sonde_global_idx, :, self.steps] = self.pos[sonde_global_idx]
+                            a = 20000 * Object.G / (dist**2)   # from F=ma and G=m1m2/r^2 as self.m = 1kg
 
 
-                    active_sondes[sonde_global_idx] = False
+                            vx += math.cos(angle) * a
+                            vy += math.sin(angle) * a
 
-           
-            current_active_indices = np.where(active_sondes)[0]
-            if len(current_active_indices) == 0:
-                 break 
+                if(x > MAP_WIDTH):
+                    x = MAP_WIDTH
+                    vx = - abs(vx * 0.5)
 
-            active_pos = self.pos[active_sondes]
-            active_spe = self.spe[active_sondes]
-            
-            diff = active_pos[:, np.newaxis, :] - self.planets[np.newaxis, :, :]
-            dist = np.linalg.norm(diff, axis=-1) + 1e-9 
+                if(x < 0):
+                    x = 0
+                    vx = abs(vx * 0.5)
 
-            accel = -Object.G * 20000 * (diff / dist[:, :, np.newaxis] ** 3).sum(axis=1)
-            
-            active_spe += accel
+                if(y > MAP_HEIGHT):
+                    y = MAP_HEIGHT
+                    vy = - abs(vy * 0.5)
+                    
+                if(y < 0):
+                    y = 0
+                    vy = abs(vy * 0.5)
 
-            mask_right = active_pos[:, 0] > MAP_WIDTH
-            mask_left = active_pos[:, 0] < 0
-            mask_bottom = active_pos[:, 1] > MAP_HEIGHT
-            mask_top = active_pos[:, 1] < 0
-
-            active_spe[mask_right, 0] = -np.abs(active_spe[mask_right, 0]) * 0.5
-            active_spe[mask_left, 0] = np.abs(active_spe[mask_left, 0]) * 0.5
-            active_spe[mask_bottom, 1] = -np.abs(active_spe[mask_bottom, 1]) * 0.5
-            active_spe[mask_top, 1] = np.abs(active_spe[mask_top, 1]) * 0.5
-            
-            # --- Store History & Update Position for active sondes ---
-            # Store position history *before* updating position for this step
-            if self.parent is not None and self.steps < self.position_history.shape[2]:
-                 self.position_history[active_sondes, :, self.steps] = active_pos
-
-            active_pos += active_spe / 10 # Update position
-
-            # --- Update global arrays ---
-            self.pos[active_sondes] = active_pos
-            self.spe[active_sondes] = active_spe
-
-            self.steps += 1
-
-            # --- Exit Conditions ---
-            # Exit if max steps reached or no sondes left active
-            if self.steps >= self.position_history.shape[2]:
-                print("Sonde simulation reached max steps.")
-                break
-            if not np.any(active_sondes):
-                # print(f"All sondes deactivated after {self.steps} steps.")
-                break
+                x += vx/10
+                y += vy/10
 
 
-            end = time.perf_counter() - start
-            if self.parent is not None and self.parent.debug:
-                gui.sonde_update.setText("SUS: " + str(round(1/end)) if end > 0 else "SUS: inf")
-            # Removed the else clause to keep the text if debug is turned off during calculation
-
-        # --- Post-processing ---
-        formated_arrivals_list = []
-        formated_history_list = []
-
-        # Ensure history array is correctly sliced and transposed only for relevant sondes
-        successful_sonde_indices = []
-        for planet_obj, data in first_arrivals_data.items():
-            sonde_idx, arrival_step, angle = data
-            formated_arrivals_list.append((planet_obj, angle)) # Store only (planet, angle)
-            successful_sonde_indices.append(sonde_idx)
-            
-        # Prepare history only for sondes that actually hit something recorded
-        if self.parent is not None and len(successful_sonde_indices) > 0:
-             # Get history up to the maximum arrival step found + buffer, or max steps
-             max_hist_step = self.steps
-             # Slice history for successful sondes up to max_hist_step
-             relevant_history = self.position_history[successful_sonde_indices, :, :max_hist_step]
-             # Transpose to (sonde, step, xy)
-             self.parent.sonde_history = np.transpose(relevant_history, (0, 2, 1))
-        elif self.parent is not None:
-             self.parent.sonde_history = np.array([]) # No successful sondes
-
-        # Update parent player state *after* all calculations
-        if self.parent is not None:
-            self.parent.accessible_planets = formated_arrivals_list # Update the player's list
-            self.parent.traj.setText("")
-            if self.parent.traj in gui.textlist: # Check if text exists before removing
-                 gui.textlist.remove(self.parent.traj)
-            self.parent.calculating = False # Signal completion
-            if self.parent.debug:
-                gui.sonde_time.setText("Recon Time: " + str(round(time.perf_counter() - s_time, 3)))
-            else: # Clear debug texts if debug is off
-                 gui.sonde_time.setText("")
-                 gui.sonde_update.setText("")
-                 
+            else:
+                    throw = True
+                    vx = self.throw_speed * math.cos(angle)
+                    vy = self.throw_speed * math.sin(angle)
+    def run(self):
+        for i in range(360):
+            print(self.sonde(i))
