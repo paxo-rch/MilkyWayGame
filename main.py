@@ -36,18 +36,9 @@ update_fps = graphics.Text("", graphics.SCREEN_WIDTH*0.05, graphics.SCREEN_HEIGH
 sonde_update = graphics.Text("", graphics.SCREEN_WIDTH*0.05, graphics.SCREEN_HEIGHT*0.15, 50, relative=False, color=(150,150,150))	
 sonde_time = graphics.Text("", graphics.SCREEN_WIDTH*0.05, graphics.SCREEN_HEIGHT*0.25, 50, relative=False, color=(150,150,150))
 
-for id, i in enumerate(ressources.types):
-    icon = ressources.icons[i]
-    if icon != "":
-        img = graphics.Image(pygame.transform.scale(pygame.image.load(icon), (50, 50)),scale=0.1,fixed=True, x = 0, y = 50 * id)
-        imageRessources[i] = img
-        imagelist.append(img)
-        textlist.append(graphics.Text(i + ": ", 50, 50 * id + 10, 40, relative=False, color=(150,150,150)))
-
 for i in range(PLANET_NUMBER):
     types = list(planets.Planet.types.keys())
 
-    
     pad = random.random() * 100
     prob = [25, 25, 9, 15, 15, 10, 1]
 
@@ -93,13 +84,13 @@ for id, i in enumerate(ressources.types):
     if icon != "":
         img = graphics.Image(pygame.transform.scale(pygame.image.load(icon), (50, 50)),scale=0.1,fixed=True, x = 0, y = 50 * id)
         imagelist.append(img)
-        txt = graphics.Text(i + ": " + str(graphics.player.ressources[i]), 50, 50 * id + 10, 40, relative=False, color=(150,150,150))
+        txt = graphics.Text(i + ": " + str(int(graphics.player.ressources[i])), 50, 50 * id + 10, 40, relative=False, color=(150,150,150))
         textlist.append(txt)
         textRessources.append(txt)
 
 def update_ressources_box():
     for i,txt in enumerate(textRessources):
-        txt.setText(ressources.types[i] + ": " + str(graphics.player.ressources[ressources.types[i]]))
+        txt.setText(ressources.types[i] + ": " + str(int(graphics.player.ressources[ressources.types[i]])))
 
 planets.Planet.update_images()
 clock = pygame.time.Clock()

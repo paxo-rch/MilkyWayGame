@@ -186,13 +186,17 @@ class Player:
                     if(i != self.planet):
                         dist = math.sqrt((i.getAbsoluteX() - self.x)**2 + (i.getAbsoluteY() - self.y)**2)
                         
-                        if(dist < 30):
+                        if(dist < 30):  # If we reach the planet (landing)
                             self.x = i.getAbsoluteX()
                             self.y = i.getAbsoluteY()
                             self.vx = 0
                             self.vy = 0
                             self.throw = False
                             self.planet = i
+
+                            for j in self.ressources:
+                                self.ressources[j] += i.reference.ressources[j]
+                                i.reference.ressources[j] = 0
 
                         elif(dist != 0):
                             dx = (i.getAbsoluteX() - self.x)
