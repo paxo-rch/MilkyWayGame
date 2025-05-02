@@ -101,7 +101,6 @@ class Player:
         self.speed = 1
         self.turn_speed = 16
         self.throw_speed = 100
-        self.fuel = 100
         self.fuel_consumption = 0.1
         self.fuel_consumption_throw = 10
         self.projection_length = 100
@@ -112,6 +111,7 @@ class Player:
 
         #Ressources
         self.ressources = {i: 0 for i in ressources.types}
+        self.ressources["Charbonites"] = 100
         
         #Path settings
         self.sonde_number = 360
@@ -227,14 +227,15 @@ class Player:
                     self.vy = abs(self.vy * 0.5)
 
 
-                if keys[pygame.K_SPACE] and self.fuel > self.fuel_consumption:
+                if keys[pygame.K_SPACE] and self.ressources["Charbonites"] > self.fuel_consumption:
                     self.thrust = True
-                    self.fuel -= self.fuel_consumption
+                    self.ressources["Charbonites"] -= self.fuel_consumption
                     self.vx += math.cos(self.angle) * self.speed
                     self.vy += math.sin(self.angle) * self.speed
 
                 else:
                     self.thrust = False
+                    self.ressources["Charbonites"] -= self.fuel_consumption / 3
 
                 self.x += self.vx/10
                 self.y += self.vy/10
@@ -243,10 +244,10 @@ class Player:
 
             if(not self.throw):
 
-                if (keys[pygame.K_SPACE] or keys[pygame.K_RETURN]) and self.fuel > self.fuel_consumption_throw and self.calculating == False:
+                if (keys[pygame.K_SPACE] or keys[pygame.K_RETURN]) and self.ressources["Charbonites"] > self.fuel_consumption_throw and self.calculating == False:
                     self.throw = True
                     self.landing_count += 1 
-                    self.fuel -= self.fuel_consumption_throw
+                    self.ressources["Charbonites"] -= self.fuel_consumption_throw
                     self.vx = self.throw_speed * math.cos(self.angle)
                     self.vy = self.throw_speed * math.sin(self.angle)
 
@@ -325,6 +326,11 @@ class Player:
 
             if(self.throw or pygame.mouse.get_pressed()[2]):
                 self.cursor = [self.x, self.y]
+
+                mouse_pos = pygame.mouse.get_pos()
+                rel_x = mouse_pos[0] - SCREEN_WIDTH/2
+                rel_y = mouse_pos[1] - SCREEN_HEIGHT/2
+                self.angle = math.atan2(rel_y,rel_x)
 
             self.score = round(self.distance)
             time.sleep(1/60)

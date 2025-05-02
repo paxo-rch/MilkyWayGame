@@ -134,7 +134,7 @@ while True:
         i.update()
 
 
-    mytext.setText("Fuel: " + str(round(entities.player.fuel,1)))
+    mytext.setText("Fuel: " + str(round(entities.player.ressources["Charbonites"],1)))
     score.setText("Score: " + str(entities.player.score))
     
     if entities.player.debug:
