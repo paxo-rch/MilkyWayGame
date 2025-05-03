@@ -29,12 +29,12 @@ path_list = []
 imageplanete = graphics.Image(pygame.image.load("assets/planets/planet1.png"),scale=0.1)
 imagelune = graphics.Image(pygame.image.load("assets/moons/moon1.png"))
 
-mytext = graphics.Text("Fuel: ", graphics.SCREEN_WIDTH*0.05, graphics.SCREEN_HEIGHT*0.9, 50, relative=False, color=(150,150,150))
-score = graphics.Text("Score: ", graphics.SCREEN_WIDTH*0.05, graphics.SCREEN_HEIGHT*0.05, 50, relative=False, color=(150,150,150))
-fps_text = graphics.Text("", graphics.SCREEN_WIDTH*0.05, graphics.SCREEN_HEIGHT*0.1, 50, relative=False, color=(150,150,150))
-update_fps = graphics.Text("", graphics.SCREEN_WIDTH*0.05, graphics.SCREEN_HEIGHT*0.2, 50, relative=False, color=(150,150,150))
-sonde_update = graphics.Text("", graphics.SCREEN_WIDTH*0.05, graphics.SCREEN_HEIGHT*0.15, 50, relative=False, color=(150,150,150))	
-sonde_time = graphics.Text("", graphics.SCREEN_WIDTH*0.05, graphics.SCREEN_HEIGHT*0.25, 50, relative=False, color=(150,150,150))
+mytext = graphics.Text("Fuel: ", graphics.SCREEN_WIDTH*0.05, graphics.SCREEN_HEIGHT*0.9, 50, relative_coords=False,relative_zoom=False, color=(150,150,150))
+score = graphics.Text("Score: ", graphics.SCREEN_WIDTH*0.05, graphics.SCREEN_HEIGHT*0.05, 50, relative_coords=False,relative_zoom=False, color=(150,150,150))
+fps_text = graphics.Text("", graphics.SCREEN_WIDTH*0.05, graphics.SCREEN_HEIGHT*0.1, 50, relative_coords=False,relative_zoom=False, color=(150,150,150))
+update_fps = graphics.Text("", graphics.SCREEN_WIDTH*0.05, graphics.SCREEN_HEIGHT*0.2, 50, relative_coords=False,relative_zoom=False, color=(150,150,150))
+sonde_update = graphics.Text("", graphics.SCREEN_WIDTH*0.05, graphics.SCREEN_HEIGHT*0.15, 50, relative_coords=False,relative_zoom=False, color=(150,150,150))	
+sonde_time = graphics.Text("", graphics.SCREEN_WIDTH*0.05, graphics.SCREEN_HEIGHT*0.25, 50, relative_coords=False,relative_zoom=False, color=(150,150,150))
 
 for i in range(PLANET_NUMBER):
     types = list(planets.Planet.types.keys())
@@ -88,7 +88,7 @@ for id, i in enumerate(ressources.types):
     if icon != "":
         img = graphics.Image(pygame.transform.scale(pygame.image.load(icon), (50, 50)),scale=0.1,fixed=True, x = 0, y = 50 * id)
         imagelist.append(img)
-        txt = graphics.Text(i + ": " + str(int(graphics.player.ressources[i])), 50, 50 * id + 10, 40, relative=False, color=(150,150,150))
+        txt = graphics.Text(i + ": " + str(int(graphics.player.ressources[i])), 50, 50 * id + 10, 40, relative_coords=False,relative_zoom=False, color=(150,150,150))
         textlist.append(txt)
         textRessources.append(txt)
 
@@ -101,6 +101,7 @@ planets.Planet.update_images()
 clock = pygame.time.Clock()
 while True:
     start = time.perf_counter()
+    
     for event in pygame.event.get():
 
         if event.type == pygame.QUIT:
@@ -135,6 +136,11 @@ while True:
                 pygame.draw.circle(graphics.screen, (0, 0, 255), (graphics.posX(i.x), graphics.posY(i.y)), 20 * entities.player.zoom)
             elif not accessed:
                 pygame.draw.circle(graphics.screen, (255, 0, 0), (graphics.posX(i.x), graphics.posY(i.y)), 20 * entities.player.zoom)
+    
+    for i in graphics.Image.imagelist:
+        i.update()
+    for i in graphics.Box.boxlist:
+        i.update()
     for i in graphics.Text.textlist:
         i.update()
 
@@ -153,7 +159,7 @@ while True:
     entities.player.draw()
 
     
-    clock.tick(165)
+    clock.tick(60)
 
     pygame.display.update()
     fps = time.perf_counter() - start
