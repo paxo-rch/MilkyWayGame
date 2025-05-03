@@ -152,10 +152,7 @@ class Player:
 
 
     def draw(self):
-        #pygame.draw.circle(screen, (255, 0, 0), (posX(self.x), posY(self.y)), 10 * p.zoom)
-
         a_mvt = self.angle
-
 
         self.i = (self.i+1) % len(self.flame_animation)
 
@@ -547,22 +544,26 @@ class Sondes:
              relevant_history = self.position_history[successful_sonde_indices, :, :max_hist_step]
              # Transpose to (sonde, step, xy)
              self.parent.sonde_history = np.transpose(relevant_history, (0, 2, 1))
+             
         elif self.parent is not None:
              self.parent.sonde_history = np.array([]) # No successful sondes
 
         # Update parent player state *after* all calculations
         if self.parent is not None:
             self.parent.accessible_planets = formated_arrivals_list # Update the player's list
-            self.parent.accessible_planets_object = []
-            for i in formated_arrivals_list:
-                self.parent.accessible_planets_object.append(i[0])
-            self.parent.traj.setText("")
-            if self.parent.traj in gui.textlist: # Check if text exists before removing
-                 gui.textlist.remove(self.parent.traj)
+            
+            if hasattr(self.parent, "traj"):
+                self.parent.traj.setText("")
+
+                gui.textlist.remove(self.parent.traj)
+
             self.parent.calculating = False # Signal completion
-            if self.parent.debug:
+
+            if self.parent.debug and hasattr(gui, "sonde_time") and hasattr(gui, "sonde_update"):
                 gui.sonde_time.setText("Recon Time: " + str(round(time.perf_counter() - s_time, 3)))
+                gui.sonde_update.setText("SUS: " + str(round(1/end)) if end > 0 else "SUS: inf")
             else: # Clear debug texts if debug is off
-                 gui.sonde_time.setText("")
-                 gui.sonde_update.setText("")
-                 
+                 if hasattr(gui, "sonde_time"):
+                     gui.sonde_time.setText("")
+                 if hasattr(gui, "sonde_update"):
+                     gui.sonde_update.setText("")

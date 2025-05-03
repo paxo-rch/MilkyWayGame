@@ -11,6 +11,7 @@ import multiprocessing
 # custom libraries
 import planets
 import entities
+import bot
 import gui
 import graphics
 import ressources
@@ -79,6 +80,8 @@ for i in range(PLANET_NUMBER):
 graphics.player = entities.Player(entities.Object.objects[0])
 entities.player = graphics.player
 
+bot_player = bot.Bot(entities.Object.objects[1])
+
 # Start the player thread
 threading.Thread(target=entities.player.update,args=()).start()
 
@@ -142,7 +145,9 @@ while True:
         sonde_update.setText("")
         sonde_time.setText("")
     
-    
+    entities.player.draw()
+    bot_player.update()
+    bot_player.draw()
 
     
     clock.tick(60)
