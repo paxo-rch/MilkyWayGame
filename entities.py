@@ -293,7 +293,7 @@ class Player:
                         if i != self.planet and click_dist_sq < click_radius**2:
                             self.selected_planet = i
                             box = Box(i.x+20,i.y+20,(400,200),relative_zoom=False,border_radius=20,border_width=20,background_color=(60,60,60),border_color=(60,60,60))
-                            text = [f"Name: {i.reference.type}",f"Coords: x={i.x} y={i.y}",f"Resources:{i.reference.resources}"]
+                            text = [f"Name: {i.reference.type}",f"Coords: x={i.x} y={i.y}"]
                             text_obj = []
                             new_line_space = 0
                             for j in text:
