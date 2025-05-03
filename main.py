@@ -52,14 +52,14 @@ for i in range(PLANET_NUMBER):
 
     reference = planets.Planet(
          random.randint(0, graphics.MAP_WIDTH), # x
-         random.randint(0, graphics.MAP_WIDTH), # y
+         random.randint(0, graphics.MAP_HEIGHT), # y
          type,                                  # type
          entities.Object.objects,               # object linked
          ressources.generate_ressources(type))                            # ressources dictionnary
 
     o = entities.Object(
          random.randint(0, graphics.MAP_WIDTH),
-         random.randint(0, graphics.MAP_WIDTH),
+         random.randint(0, graphics.MAP_HEIGHT),
          1) # mass
     
     o.image = imageplanete
@@ -127,21 +127,9 @@ while True:
     for i in entities.Object.objects:
         i.updateAll()
         i.drawAll()
-
-        if entities.player.map:
-            accessed = False
-            for j in entities.player.accessible_planets:
-                    if j[0] == i:
-                        accessed = True
-                        pygame.draw.circle(graphics.screen, (0, 255, 0), (graphics.posX(i.x), graphics.posY(i.y)), 20 * entities.player.zoom)
-                        break
-            if i == entities.player.selected_planet:
-                pygame.draw.circle(graphics.screen, (0, 0, 255), (graphics.posX(i.x), graphics.posY(i.y)), 20 * entities.player.zoom)
-            elif not accessed:
-                pygame.draw.circle(graphics.screen, (255, 0, 0), (graphics.posX(i.x), graphics.posY(i.y)), 20 * entities.player.zoom)
-    
     for i in graphics.Image.imagelist:
         i.update()
+    entities.player.draw()
     for i in graphics.Box.boxlist:
         i.update()
     for i in graphics.Text.textlist:
