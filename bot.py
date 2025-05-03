@@ -1,12 +1,69 @@
 from entities import *
 import graphics
 import pygame
-
+import entities
 class Bot(Player):
-    def __init__(self, object):
+    def __init__(self, planet):
         self.ai_state = 0 # 0=landed, 1=calculating, 2=throwing
-        super().__init__(object)
+        self.planet = planet
+        self.x = planet.getAbsoluteX()
+        self.y = planet.getAbsoluteY()
+        self.vx = 0
+        self.vy = 0
+        self.angle = 0
+        self.speed = 1
+        self.turn_speed = 16
+        self.throw_speed = 100
+        self.fuel_consumption = 0.1
+        self.fuel_consumption_throw = 10
+        self.projection_length = 100
+        self.throw = False
+        self.thrust = False
+        self.landing_count = 1
+        self.distance = 0
+
+        #Ship level
+        self.detector_level = 10
+        self.base_detection_range = 1000
+
+        #Ressources
+        self.ressources = {i: 0 for i in ressources.types}
+        self.ressources["Charbonites"] = 100
+
+        #Path settings
+        self.sonde_number = 10
+
+        #Path variables
+        self.accessible_planets = []
+
+
+
+        self.calculating = False
+        self.icon_rocket = pygame.image.load("assets/player/rocket.png")
+        self.flame_animation = []
+        # read the gif file
+        for f in range(1, 29):
+            self.flame_animation.append(pygame.image.load(f"assets/player/flame_gif/{f}.gif"))
+
+        self.i = 0
     
+    def draw(self):
+        a_mvt = self.angle
+
+        self.i = (self.i+1) % len(self.flame_animation)
+
+        sprite_size = (int(self.icon_rocket.get_width()*entities.player.zoom*0.05), int(self.icon_rocket.get_height()*entities.player.zoom*0.05))
+        sprite_surface = pygame.Surface(sprite_size, pygame.SRCALPHA)
+        rocket_scaled = pygame.transform.scale(self.icon_rocket, sprite_size)
+        sprite_surface.blit(rocket_scaled, (0, 0))
+        
+        if(self.thrust):
+            flame_scaled = pygame.transform.scale(self.flame_animation[self.i], [sprite_size[0]/5, sprite_size[1]/3])
+            sprite_surface.blit(flame_scaled, (sprite_size[0]*0.4, sprite_size[0]*0.7))
+            
+        rotated_sprite = pygame.transform.rotate(sprite_surface, -90 - math.degrees(a_mvt))
+        screen.blit(rotated_sprite, (posX(self.x)-rotated_sprite.get_width()//2, posY(self.y)-rotated_sprite.get_height()//2))
+
     def update(self):
         if self.throw:
             for i in Object.objects:    # physics
@@ -63,13 +120,12 @@ class Bot(Player):
             self.distance += math.sqrt((self.vx/10)**2 + (self.vy/10)**2)
 
         else:
-            # Here must be the code to make the AI make a decision
             
             if(self.ai_state == 0):
                 self.ai_state = 1
 
                 self.calculating = True
-                sd = Sondes(Object.objects,10,self)
+                sd = Sondes(Object.objects,self.sonde_number,self)
                 self.sonde = sd
                 threading.Thread(target=sd.run, args=()).start()
 

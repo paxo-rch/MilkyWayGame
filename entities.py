@@ -158,7 +158,7 @@ class Player:
 
         sprite_size = (int(self.icon_rocket.get_width()*player.zoom*0.05), int(self.icon_rocket.get_height()*player.zoom*0.05))
         sprite_surface = pygame.Surface(sprite_size, pygame.SRCALPHA)
-        rocket_scaled = pygame.transform.scale(self.icon_rocket, sprite_size)
+        rocket_scaled = pygame.transform.scale(player.icon_rocket, sprite_size)
         sprite_surface.blit(rocket_scaled, (0, 0))
         
         if(self.thrust):
@@ -521,7 +521,7 @@ class Sondes:
 
 
             end = time.perf_counter() - start
-            if self.parent is not None and self.parent.debug:
+            if self.parent is not None and hasattr(self.parent,"debug") and self.parent.debug:
                 gui.sonde_update.setText("SUS: " + str(round(1/end)) if end > 0 else "SUS: inf")
             # Removed the else clause to keep the text if debug is turned off during calculation
 
@@ -559,7 +559,7 @@ class Sondes:
 
             self.parent.calculating = False # Signal completion
 
-            if self.parent.debug and hasattr(gui, "sonde_time") and hasattr(gui, "sonde_update"):
+            if hasattr(self.parent,"debug") and hasattr(gui, "sonde_time") and hasattr(gui, "sonde_update"):
                 gui.sonde_time.setText("Recon Time: " + str(round(time.perf_counter() - s_time, 3)))
                 gui.sonde_update.setText("SUS: " + str(round(1/end)) if end > 0 else "SUS: inf")
             else: # Clear debug texts if debug is off
