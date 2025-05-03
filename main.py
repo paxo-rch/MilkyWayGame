@@ -130,10 +130,9 @@ while True:
     for i in graphics.Image.imagelist:
         i.update()
     entities.player.draw()
-    for i in graphics.Box.boxlist:
-        i.update()
-    for i in graphics.Text.textlist:
-        i.update()
+    for i in sorted(graphics.hierarchy_list.keys()):
+        for j in graphics.hierarchy_list[i]:
+            j.update()
 
 
     mytext.setText("Fuel: " + str(round(entities.player.ressources["Charbonites"],1)))

@@ -115,7 +115,8 @@ class Player:
         #Ressources
         self.ressources = {i: 0 for i in ressources.types}
         self.ressources["Charbonites"] = 100
-        
+        #Inventory
+        self.inventory_opened = False
         #Path settings
         self.sonde_number = 360
         self.path = True
@@ -248,7 +249,7 @@ class Player:
 
             else:
 
-                if (keys[pygame.K_SPACE] or keys[pygame.K_RETURN]) and self.ressources["Charbonites"] > self.fuel_consumption_throw and self.calculating == False and not self.map:
+                if (keys[pygame.K_SPACE] or keys[pygame.K_RETURN]) and self.ressources["Charbonites"] > self.fuel_consumption_throw and self.calculating == False:
                     self.throw = True
                     self.landing_count += 1 
                     self.ressources["Charbonites"] -= self.fuel_consumption_throw
@@ -288,7 +289,16 @@ class Player:
                 elif keys[pygame.K_d]:
                     self.debug = not self.debug
                     time.sleep(0.1)
-            
+                elif not self.calculating and not self.map and keys[pygame.K_e]:
+                    self.inventory_opened = not self.inventory_opened
+                    if self.inventory_opened:
+                        inventory_box = Box(SCREEN_WIDTH/4,SCREEN_HEIGHT/4,(SCREEN_WIDTH/2,SCREEN_HEIGHT/2),relative_coords=False,relative_zoom=False,background_color=(102, 102, 102),border_color=(102, 102, 102),border_radius=20,border_width=20)
+                        inventory_text = Text("Inventory",SCREEN_WIDTH/4,SCREEN_HEIGHT/4,100,relative_coords=False,relative_zoom=False,z=2)
+                    else:
+                        inventory_box.destroy()
+                        inventory_text.destroy()
+                    time.sleep(0.1)                
+                
                 mouseState = pygame.mouse.get_pressed()[0]
 
                 # wheel for zoom
