@@ -541,11 +541,15 @@ class Sondes:
         # Update parent player state *after* all calculations
         if self.parent is not None:
             self.parent.accessible_planets = formated_arrivals_list # Update the player's list
-            
-            if hasattr(self.parent, "traj"):
-                self.parent.traj.setText("")
 
-                gui.textlist.remove(self.parent.traj)
+            self.parent.accessible_planets_object = []
+            for i in formated_arrivals_list:
+                self.parent.accessible_planets_object.append(i[0])
+
+            if self.parent == player:
+                self.parent.traj.setText("")
+                if self.parent.traj in gui.textlist: # Check if text exists before removing
+                    gui.textlist.remove(self.parent.traj)
 
             self.parent.calculating = False # Signal completion
 
@@ -557,3 +561,4 @@ class Sondes:
                      gui.sonde_time.setText("")
                  if hasattr(gui, "sonde_update"):
                      gui.sonde_update.setText("")
+                 
