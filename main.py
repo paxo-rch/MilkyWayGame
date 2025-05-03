@@ -12,6 +12,7 @@ import multiprocessing
 import planets
 import entities
 import bot
+import weapons
 import gui
 import graphics
 import ressources
@@ -82,6 +83,8 @@ entities.player = graphics.player
 
 bot_player = bot.Bot(entities.Object.objects[1])
 
+laser = weapons.Laser(entities.Object.objects[0], entities.player)
+
 # Start the player thread
 threading.Thread(target=entities.player.update,args=()).start()
 
@@ -127,9 +130,18 @@ while True:
     for i in entities.Object.objects:
         i.updateAll()
         i.drawAll()
+
     for i in graphics.Image.imagelist:
         i.update()
+
+    weapons.Weapon.updateAll()
+
+    bot_player.update()
+
+    weapons.Weapon.drawAll()
+    
     entities.player.draw()
+    bot_player.draw()
     for i in sorted(graphics.hierarchy_list.keys()):
         for j in graphics.hierarchy_list[i]:
             j.update()
@@ -144,11 +156,6 @@ while True:
         update_fps.setText("")
         sonde_update.setText("")
         sonde_time.setText("")
-    
-    entities.player.draw()
-    bot_player.update()
-    bot_player.draw()
-
     
     clock.tick(60)
 
