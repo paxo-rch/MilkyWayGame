@@ -75,10 +75,14 @@ for i in range(PLANET_NUMBER):
 
     entities.Object.objects.append(o)
 
+# The player is responsible for updating its position and throw state
 graphics.player = entities.Player(entities.Object.objects[0])
 entities.player = graphics.player
+
+# Start the player thread
 threading.Thread(target=entities.player.update,args=()).start()
 
+# Affichage des ressources
 for id, i in enumerate(ressources.types):
     icon = ressources.icons[i]
     if icon != "":
@@ -89,6 +93,7 @@ for id, i in enumerate(ressources.types):
         textRessources.append(txt)
 
 def update_ressources_box():
+    # Mise a jour de la boite de ressources
     for i,txt in enumerate(textRessources):
         txt.setText(ressources.types[i] + ": " + str(int(graphics.player.ressources[ressources.types[i]])))
 
@@ -107,7 +112,7 @@ while True:
                 entities.player.zoom *= (event.y)*0.2 + 1
                 planets.Planet.update_images()
 
-    graphics.screen.fill((0, 0, 0))
+    graphics.screen.fill((10, 15, 30))
     entities.Object.time()
 
     update_ressources_box()
