@@ -120,6 +120,7 @@ class Player:
         self.inventory_opened = False
         #Path settings
         self.sonde_number = 360
+        self.rcs = False
 
         #Path variables
         self.sonde = None
@@ -175,12 +176,6 @@ class Player:
         while True:
             start = time.perf_counter()
             keys = pygame.key.get_pressed()
-
-            if keys[pygame.K_RIGHT]:
-                    self.angle += self.turn_speed * math.pi / 360
-
-            elif keys[pygame.K_LEFT]:
-                    self.angle -= self.turn_speed * math.pi / 360
 
             if self.throw:
 
@@ -244,10 +239,28 @@ class Player:
                         self.distance = 0
                         self.landing_count = 1
                         self.ressources["Charbonites"] = 100
+                        self.throw = False
+                        self.thrust = False
                     else:
                         self.ressources["Charbonites"] -= self.fuel_consumption / 3
-                    
+                
+                if keys[pygame.K_r]:
+                    self.rcs = not self.rcs
+                    time.sleep(0.1)
 
+                if self.rcs:
+                    target_angle = math.atan2(self.vy,self.vx) + math.pi
+                    angle_diff = (target_angle - self.angle + math.pi) % (2 * math.pi) - math.pi
+                    if abs(angle_diff) > math.radians(self.turn_speed):
+                        self.angle += math.copysign(math.radians(self.turn_speed), angle_diff)
+                        self.angle %= (2 * math.pi)
+                    elif abs(angle_diff) <= math.radians(self.turn_speed):
+                             self.thrust = True 
+                             self.ressources["Charbonites"] -= self.fuel_consumption
+                             thrust_vx = math.cos(self.angle) * self.speed
+                             thrust_vy = math.sin(self.angle) * self.speed
+                             self.vx += thrust_vx
+                             self.vy += thrust_vy
                 self.x += self.vx/10
                 self.y += self.vy/10
                 self.distance += math.sqrt((self.vx/10)**2 + (self.vy/10)**2)
@@ -385,7 +398,8 @@ class Player:
                 mouse_pos = pygame.mouse.get_pos()
                 rel_x = mouse_pos[0] - SCREEN_WIDTH/2
                 rel_y = mouse_pos[1] - SCREEN_HEIGHT/2
-                self.angle = math.atan2(rel_y,rel_x)
+                if pygame.mouse.get_pressed()[2]:
+                    self.angle = math.atan2(rel_y,rel_x)
             if keys[pygame.K_LEFT]:
                     self.angle -= self.turn_speed * math.pi / 360
             elif keys[pygame.K_RIGHT]:
