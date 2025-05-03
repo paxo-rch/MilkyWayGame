@@ -147,7 +147,6 @@ while True:
 
     mytext.setText("Fuel: " + str(round(entities.player.ressources["Charbonites"],1)))
     score.setText("Score: " + str(entities.player.score))
-    
     if entities.player.debug:
         fps_text.setText("FPS: " + str(round(1/fps)))
     else:

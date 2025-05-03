@@ -101,7 +101,6 @@ class Player:
         self.speed = 1
         self.turn_speed = 16
         self.throw_speed = 100
-        self.fuel = 100
         self.fuel_consumption = 0.1
         self.fuel_consumption_throw = 10
         self.projection_length = 100
@@ -112,6 +111,7 @@ class Player:
 
         #Ressources
         self.ressources = {i: 0 for i in ressources.types}
+        self.ressources["Charbonites"] = 100
         
         #Path settings
         self.sonde_number = 360
@@ -195,6 +195,9 @@ class Player:
                             self.vy = 0
                             self.throw = False
                             self.planet = i
+                            for j in self.ressources:
+                                self.ressources[j] += i.reference.ressources[j]
+                                i.reference.ressources[j] = 0
 
                         elif(dist != 0):
                             dx = (i.getAbsoluteX() - self.x)
@@ -225,14 +228,15 @@ class Player:
                     self.vy = abs(self.vy * 0.5)
 
 
-                if keys[pygame.K_SPACE] and self.fuel > self.fuel_consumption:
+                if keys[pygame.K_SPACE] and self.ressources["Charbonites"] > self.fuel_consumption:
                     self.thrust = True
-                    self.fuel -= self.fuel_consumption
+                    self.ressources["Charbonites"] -= self.fuel_consumption
                     self.vx += math.cos(self.angle) * self.speed
                     self.vy += math.sin(self.angle) * self.speed
 
                 else:
                     self.thrust = False
+                    self.ressources["Charbonites"] -= self.fuel_consumption / 3
 
                 self.x += self.vx/10
                 self.y += self.vy/10
@@ -241,10 +245,10 @@ class Player:
 
             else:
 
-                if (keys[pygame.K_SPACE] or keys[pygame.K_RETURN]) and self.fuel > self.fuel_consumption_throw and self.calculating == False:
+                if (keys[pygame.K_SPACE] or keys[pygame.K_RETURN]) and self.ressources["Charbonites"] > self.fuel_consumption_throw and self.calculating == False:
                     self.throw = True
                     self.landing_count += 1 
-                    self.fuel -= self.fuel_consumption_throw
+                    self.ressources["Charbonites"] -= self.fuel_consumption_throw
                     self.vx = self.throw_speed * math.cos(self.angle)
                     self.vy = self.throw_speed * math.sin(self.angle)
 
@@ -289,7 +293,7 @@ class Player:
                         if i != self.planet and click_dist_sq < click_radius**2:
                             self.selected_planet = i
                             box = Box(i.x+20,i.y+20,(400,200),relative_zoom=False,border_radius=20,border_width=20,background_color=(60,60,60),border_color=(60,60,60))
-                            text = [f"Name: {i.reference.type}",f"Coords: x={i.x} y={i.y}"]
+                            text = [f"Name: {i.reference.type}",f"Coords: x={i.x} y={i.y}",f"Resources:{i.reference.resources}"]
                             text_obj = []
                             new_line_space = 0
                             for j in text:
@@ -335,6 +339,10 @@ class Player:
 
             if(self.throw or pygame.mouse.get_pressed()[2]):
                 self.cursor = [self.x, self.y]
+                mouse_pos = pygame.mouse.get_pos()
+                rel_x = mouse_pos[0] - SCREEN_WIDTH/2
+                rel_y = mouse_pos[1] - SCREEN_HEIGHT/2
+                self.angle = math.atan2(rel_y,rel_x)
 
             self.score = round(self.distance)
             clock.tick(60)
