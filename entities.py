@@ -109,6 +109,9 @@ class Player:
         self.landing_count = 1
         self.distance = 0
 
+        #Ship level
+        self.detector_level = 10
+        self.base_detection_range = 1000
         #Ressources
         self.ressources = {i: 0 for i in ressources.types}
         self.ressources["Charbonites"] = 100
@@ -123,9 +126,12 @@ class Player:
         self.show_accessible_planets = True
         self.sonde = None
         self.accessible_planets = []
+        self.accessible_planets_object = []
         self.selected_planet = None
 
         self.map = False
+        self.map_objects = []
+        self.text_obj = []
         self.score = 0
         self.calculating = False
         self.icon_rocket = pygame.image.load("assets/player/rocket.png")
@@ -245,7 +251,7 @@ class Player:
 
             else:
 
-                if (keys[pygame.K_SPACE] or keys[pygame.K_RETURN]) and self.ressources["Charbonites"] > self.fuel_consumption_throw and self.calculating == False:
+                if (keys[pygame.K_SPACE] or keys[pygame.K_RETURN]) and self.ressources["Charbonites"] > self.fuel_consumption_throw and self.calculating == False and not self.map:
                     self.throw = True
                     self.landing_count += 1 
                     self.ressources["Charbonites"] -= self.fuel_consumption_throw
@@ -255,17 +261,31 @@ class Player:
 
                 elif keys[pygame.K_s] and self.calculating == False:
                     self.calculating = True
-                    self.traj = Text("Calcul de trajectoire en cours...", SCREEN_HEIGHT/2, SCREEN_WIDTH/2, 100,relative=False, color=(255,255,255))
+                    self.traj = Text("Calcul de trajectoire en cours...", SCREEN_HEIGHT/2, SCREEN_WIDTH/2, 100,relative_coords=False,relative_zoom=False, color=(255,255,255))
                     sd = Sondes(Object.objects,self.sonde_number,self)
                     player.sonde = sd
                     threading.Thread(target=sd.run, args=()).start()
 
                 elif keys[pygame.K_c] and self.calculating == False:
                     self.accessible_planets = []
+                    self.parent.accessible_planets_object = []
                     self.sonde = None
 
                 elif keys[pygame.K_m] and self.calculating == False:
                     self.map = not self.map
+                    if self.map:
+                        map_text = Text("Map",SCREEN_WIDTH/2.1, SCREEN_HEIGHT/15, 100,relative_coords=False,relative_zoom=False, color=(255,255,255))
+                        for i in Object.objects:
+                            if i in self.accessible_planets_object:
+                                map_box = Box(i.x-50,i.y-50,(110,110),relative_zoom=True,relative_coords=True,transparent_bg=True,border_color=(0,255,0),border_width=10,border_radius=10)
+                                """else:
+                                map_box = Box(i.x-50,i.y-50,(110,110),relative_zoom=True,relative_coords=True,transparent_bg=True,border_color=(255,0,0),border_width=10,border_radius=10)"""
+                                self.map_objects.append(map_box)
+                    else:
+                        map_text.destroy()
+                        for i in self.map_objects:
+                            i.destroy()
+                        self.map_objects = []
                     time.sleep(0.1)
 
                 elif keys[pygame.K_d]:
@@ -293,13 +313,16 @@ class Player:
                         if i != self.planet and click_dist_sq < click_radius**2:
                             self.selected_planet = i
                             box = Box(i.x+20,i.y+20,(400,200),relative_zoom=False,border_radius=20,border_width=20,background_color=(60,60,60),border_color=(60,60,60))
-                            text = [f"Name: {i.reference.type}",f"Coords: x={i.x} y={i.y}"]
-                            text_obj = []
+                            selected_box = Box(i.x-50,i.y-50,(110,110),relative_zoom=True,relative_coords=True,transparent_bg=True,border_color=(0,0,255),border_width=10,border_radius=10)
+                            if round(math.sqrt((i.getAbsoluteX() - self.x)**2 + (i.getAbsoluteY() - self.y)**2),1) < self.base_detection_range*1.5**self.detector_level:
+                                text = [f"Name: {i.reference.type}",f"Coords: x={i.x} y={i.y}",f"distance:{round(math.sqrt((i.getAbsoluteX() - self.x)**2 + (i.getAbsoluteY() - self.y)**2),1)}"]
+                            else:
+                                text = [f"Name: ?",f"Coords: x=? y=?",f"distance:?"]
                             new_line_space = 0
                             for j in text:
                                 txt = Text(j,i.x+20,i.y+20+new_line_space,20,relative_zoom=False,master_object=box)
                                 new_line_space+=20
-                                text_obj.append(txt)
+                                self.text_obj.append(txt)
                             for accessible_planet, launch_angle in self.accessible_planets: 
                                 if accessible_planet == i:
                                     self.angle = launch_angle
@@ -308,11 +331,18 @@ class Player:
                             break
                         elif box != None:
                             box.destroy()
-                            for k in text_obj:
+                            selected_box.destroy()
+                            for k in self.text_obj:
                                 k.destroy()
-                            text_obj = []
+                            self.text_obj = []
                             box = None
-
+                elif not self.map and box!= None:
+                        box.destroy()
+                        selected_box.destroy()
+                        for k in self.text_obj:
+                            k.destroy()
+                        self.text_obj = []
+                        box = None
 
                 if(mouseState):
                     pos = pygame.mouse.get_pos()
@@ -322,14 +352,14 @@ class Player:
                     if(self.cursor[0] < 0):
                         self.cursor[0] = 0
 
-                    if(self.cursor[0] > MAP_WIDTH - SCREEN_WIDTH):
-                        self.cursor[0] = MAP_WIDTH - SCREEN_WIDTH
+                    if(self.cursor[0] > MAP_WIDTH):
+                        self.cursor[0] = MAP_WIDTH
 
                     if(self.cursor[1] < 0):
                         self.cursor[1] = 0
 
-                    if(self.cursor[1] > MAP_HEIGHT - SCREEN_HEIGHT):
-                        self.cursor[1] = MAP_HEIGHT - SCREEN_HEIGHT
+                    if(self.cursor[1] > MAP_HEIGHT):
+                        self.cursor[1] = MAP_HEIGHT
 
                 else:
                     self.oldMousePosition = pygame.mouse.get_pos()
@@ -513,6 +543,9 @@ class Sondes:
         # Update parent player state *after* all calculations
         if self.parent is not None:
             self.parent.accessible_planets = formated_arrivals_list # Update the player's list
+            self.parent.accessible_planets_object = []
+            for i in formated_arrivals_list:
+                self.parent.accessible_planets_object.append(i[0])
             self.parent.traj.setText("")
             if self.parent.traj in gui.textlist: # Check if text exists before removing
                  gui.textlist.remove(self.parent.traj)

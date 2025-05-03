@@ -45,7 +45,7 @@ class Box:
         if self.relative_zoom:
             width = round(self.border_width*player.zoom+0.99)
             radius = round(self.border_radius*player.zoom+0.99)
-            size = ((self.size[0]-width)*player.zoom,(self.size[1]-width)*player.zoom)
+            size = ((self.size[0]*player.zoom-width),(self.size[1]*player.zoom-width))
         else:
             width = self.border_width
             radius = self.border_radius
