@@ -547,12 +547,6 @@ class Sondes:
 
                 gui.textlist.remove(self.parent.traj)
 
-            self.parent.accessible_planets_object = []
-            for i in formated_arrivals_list:
-                self.parent.accessible_planets_object.append(i[0])
-            self.parent.traj.setText("")
-            if self.parent.traj in gui.textlist: # Check if text exists before removing
-                 gui.textlist.remove(self.parent.traj)
             self.parent.calculating = False # Signal completion
 
             if self.parent.debug and hasattr(gui, "sonde_time") and hasattr(gui, "sonde_update"):
@@ -563,4 +557,3 @@ class Sondes:
                      gui.sonde_time.setText("")
                  if hasattr(gui, "sonde_update"):
                      gui.sonde_update.setText("")
-                 
