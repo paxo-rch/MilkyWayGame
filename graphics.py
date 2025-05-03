@@ -11,6 +11,8 @@ screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
 
 player = None # Placeholder for the player object
 
+hierarchy_list = {}
+
 def posX(x):
     return SCREEN_WIDTH//2 + (x - player.cursor[0]) * player.zoom
 
@@ -18,12 +20,12 @@ def posX(x):
 def posY(y):
     return SCREEN_HEIGHT//2 + (y - player.cursor[1]) * player.zoom
 class Box:
-    boxlist = []
-    def __init__(self,x,y,size,relative_coords=True,relative_zoom=True,transparent_bg=False,transparent_border=False,border_color=(255,255,255),background_color=(255,255,255),border_radius=0,border_width=1,master_object=None):
+    def __init__(self,x,y,size,relative_coords=True,relative_zoom=True,transparent_bg=False,transparent_border=False,border_color=(255,255,255),background_color=(255,255,255),border_radius=0,border_width=1,master_object=None,z=1):
         self.relative_coords = relative_coords
         self.relative_zoom = relative_zoom
         self.x = x
         self.y = y
+        self.z = z
         self.size = size
         self.transparent_bg = transparent_bg
         self.transparent_border = transparent_border
@@ -34,7 +36,9 @@ class Box:
         self.master_object = master_object
         if self.master_object != None:
             self.coords_to_master = (master_object.x-self.x,master_object.y-self.y)
-        Box.boxlist.append(self)
+        if z not in hierarchy_list.keys():
+            hierarchy_list[z] = []
+        hierarchy_list[z].append(self)
     def update(self):
         if self.master_object != None:
             self.x,self.y = (self.master_object.x-self.coords_to_master[0]/player.zoom,self.master_object.y-self.coords_to_master[1]/player.zoom)
@@ -57,12 +61,11 @@ class Box:
         if not self.transparent_border:
             pygame.draw.rect(screen,self.border_color,self.render_border,width,radius)
     def destroy(self):
-        Box.boxlist.remove(self)
+        hierarchy_list[self.z].remove(self)
 
 class Text:
-    textlist = []
 
-    def __init__(self, text, x, y, size, relative_coords=True, relative_zoom=True,color=(255,255,255),master_object = None):
+    def __init__(self, text, x, y, size, relative_coords=True, relative_zoom=True,color=(255,255,255),master_object = None,z=1):
         self.font = pygame.font.SysFont(None, size)
         self.text = str(text)
         self.color = color
@@ -72,11 +75,14 @@ class Text:
         self.render = self.font.render(self.text, True,pygame.Color(color[0],color[1],color[2]))
         self.x = x
         self.y = y
+        self.z = z
         self.master_object = master_object
         if self.master_object != None:
             self.coords_to_master = (master_object.x-self.x,master_object.y-self.y)
         self.size = size
-        Text.textlist.append(self)
+        if z not in hierarchy_list.keys():
+            hierarchy_list[z] = []
+        hierarchy_list[z].append(self)
 
 
     def update(self):
@@ -100,7 +106,7 @@ class Text:
 
 
     def destroy(self):
-        Text.textlist.remove(self)
+        hierarchy_list[self.z].remove(self)
 
 
 class Image:
