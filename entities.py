@@ -93,6 +93,7 @@ class Object:
 class Player:
     def __init__(self, planet):
         self.planet = planet
+        self.spawn_planet = planet
         self.x = planet.getAbsoluteX()
         self.y = planet.getAbsoluteY()
         self.vx = 0
@@ -119,12 +120,8 @@ class Player:
         self.inventory_opened = False
         #Path settings
         self.sonde_number = 360
-        self.path = True
-        self.path_step = 1
-        self.clean_path = True
 
         #Path variables
-        self.show_accessible_planets = True
         self.sonde = None
         self.accessible_planets = []
         self.accessible_planets_object = []
@@ -240,7 +237,16 @@ class Player:
 
                 else:
                     self.thrust = False
-                    self.ressources["Charbonites"] -= self.fuel_consumption / 3
+                    if self.ressources["Charbonites"] < self.fuel_consumption /3:
+                        self.x = self.spawn_planet.getAbsoluteX()
+                        self.y = self.spawn_planet.getAbsoluteY()
+                        self.score = 0
+                        self.distance = 0
+                        self.landing_count = 1
+                        self.ressources["Charbonites"] = 100
+                    else:
+                        self.ressources["Charbonites"] -= self.fuel_consumption / 3
+                    
 
                 self.x += self.vx/10
                 self.y += self.vy/10
@@ -380,7 +386,10 @@ class Player:
                 rel_x = mouse_pos[0] - SCREEN_WIDTH/2
                 rel_y = mouse_pos[1] - SCREEN_HEIGHT/2
                 self.angle = math.atan2(rel_y,rel_x)
-
+            if keys[pygame.K_LEFT]:
+                    self.angle -= self.turn_speed * math.pi / 360
+            elif keys[pygame.K_RIGHT]:
+                    self.angle += self.turn_speed * math.pi / 360
             self.score = round(self.distance)
             clock.tick(60)
             end = time.perf_counter() - start

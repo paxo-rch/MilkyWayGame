@@ -130,6 +130,8 @@ while True:
     for i in graphics.Image.imagelist:
         i.update()
     entities.player.draw()
+    bot_player.update()
+    bot_player.draw()
     for i in sorted(graphics.hierarchy_list.keys()):
         for j in graphics.hierarchy_list[i]:
             j.update()
@@ -145,9 +147,7 @@ while True:
         sonde_update.setText("")
         sonde_time.setText("")
     
-    entities.player.draw()
-    bot_player.update()
-    bot_player.draw()
+    
 
     
     clock.tick(60)
