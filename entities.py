@@ -255,7 +255,7 @@ class Player:
 
                 elif keys[pygame.K_s] and self.calculating == False:
                     self.calculating = True
-                    self.traj = Text("Calcul de trajectoire en cours...", SCREEN_HEIGHT/2, SCREEN_WIDTH/2, 100,relative=False, color=(255,255,255))
+                    self.traj = Text("Calcul de trajectoire en cours...", SCREEN_HEIGHT/2, SCREEN_WIDTH/2, 100,relative_coords=False,relative_zoom=False, color=(255,255,255))
                     sd = Sondes(Object.objects,self.sonde_number,self)
                     player.sonde = sd
                     threading.Thread(target=sd.run, args=()).start()
