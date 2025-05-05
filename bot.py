@@ -65,87 +65,87 @@ class Bot(Player):
         screen.blit(rotated_sprite, (posX(self.x)-rotated_sprite.get_width()//2, posY(self.y)-rotated_sprite.get_height()//2))
 
     def update(self):
-        if self.throw:
-            for i in Object.objects:    # physics
-                if(i != self.planet):
-                    dist = math.sqrt((i.getAbsoluteX() - self.x)**2 + (i.getAbsoluteY() - self.y)**2)
+            if self.throw:
+                for i in Object.objects:    # physics
+                    if(i != self.planet):
+                        dist = math.sqrt((i.getAbsoluteX() - self.x)**2 + (i.getAbsoluteY() - self.y)**2)
+                        
+                        if(dist < 30):
+                            self.x = i.getAbsoluteX()
+                            self.y = i.getAbsoluteY()
+                            self.vx = 0
+                            self.vy = 0
+                            self.throw = False
+                            self.planet = i
+                            self.ai_state = 0
+
+                            for j in self.ressources:
+                                self.ressources[j] += i.reference.ressources[j]
+                                i.reference.ressources[j] = 0
+
+                        elif(dist != 0):
+                            dx = (i.getAbsoluteX() - self.x)
+                            dy = (i.getAbsoluteY() - self.y)
+
+                            angle = math.atan2(dy, dx)
+
+                            a = 20000 * Object.G / (dist**2)   # from F=ma and G=m1m2/r^2 as self.m = 1kg
+
+                            self.vx += math.cos(angle) * a
+                            self.vy += math.sin(angle) * a
+
+                if(self.x > MAP_WIDTH):
+                    self.x = MAP_WIDTH
+                    self.vx = - abs(self.vx * 0.5)
+
+                if(self.x < 0):
+                    self.x = 0
+                    self.vx = abs(self.vx * 0.5)
+
+                if(self.y > MAP_HEIGHT):
+                    self.y = MAP_HEIGHT
+                    self.vy = - abs(self.vy * 0.5)
                     
-                    if(dist < 30):
-                        self.x = i.getAbsoluteX()
-                        self.y = i.getAbsoluteY()
-                        self.vx = 0
-                        self.vy = 0
-                        self.throw = False
-                        self.planet = i
-                        self.ai_state = 0
+                if(self.y < 0):
+                    self.y = 0
+                    self.vy = abs(self.vy * 0.5)
 
-                        for j in self.ressources:
-                            self.ressources[j] += i.reference.ressources[j]
-                            i.reference.ressources[j] = 0
 
-                    elif(dist != 0):
-                        dx = (i.getAbsoluteX() - self.x)
-                        dy = (i.getAbsoluteY() - self.y)
+            
+                self.thrust = False
+                self.ressources["Charbonites"] -= self.fuel_consumption / 2
 
-                        angle = math.atan2(dy, dx)
+                self.x += self.vx/10
+                self.y += self.vy/10
+                self.distance += math.sqrt((self.vx/10)**2 + (self.vy/10)**2)
 
-                        a = 20000 * Object.G / (dist**2)   # from F=ma and G=m1m2/r^2 as self.m = 1kg
-
-                        self.vx += math.cos(angle) * a
-                        self.vy += math.sin(angle) * a
-
-            if(self.x > MAP_WIDTH):
-                self.x = MAP_WIDTH
-                self.vx = - abs(self.vx * 0.5)
-
-            if(self.x < 0):
-                self.x = 0
-                self.vx = abs(self.vx * 0.5)
-
-            if(self.y > MAP_HEIGHT):
-                self.y = MAP_HEIGHT
-                self.vy = - abs(self.vy * 0.5)
+            else:
                 
-            if(self.y < 0):
-                self.y = 0
-                self.vy = abs(self.vy * 0.5)
+                if(self.ai_state == 0):
+                    self.ai_state = 1
 
+                    self.calculating = True
+                    sd = Sondes(Object.objects,self.sonde_number,self)
+                    self.sonde = sd
+                    threading.Thread(target=sd.run, args=()).start()
 
-        
-            self.thrust = False
-            self.ressources["Charbonites"] -= self.fuel_consumption / 2
+                elif(self.ai_state == 1 and self.calculating == False): # If the calculation is done
+                    self.ai_state = 2
+                
+                    if(len(self.accessible_planets) > 0):
+                        min_dist = 999999999
+                        closest_planet = None
+                        for i in self.accessible_planets:
+                            dist = math.sqrt((i[0].getAbsoluteX() - graphics.player.x)**2 + (i[0].getAbsoluteY() - graphics.player.y)**2)
+                            if(dist < min_dist):
+                                min_dist = dist
+                                closest_planet = i
 
-            self.x += self.vx/10
-            self.y += self.vy/10
-            self.distance += math.sqrt((self.vx/10)**2 + (self.vy/10)**2)
+                        if(closest_planet != None):
+                            self.angle = closest_planet[1]
 
-        else:
-            
-            if(self.ai_state == 0):
-                self.ai_state = 1
-
-                self.calculating = True
-                sd = Sondes(Object.objects,self.sonde_number,self)
-                self.sonde = sd
-                threading.Thread(target=sd.run, args=()).start()
-
-            elif(self.ai_state == 1 and self.calculating == False): # If the calculation is done
-                self.ai_state = 2
-            
-                if(len(self.accessible_planets) > 0):
-                    min_dist = 999999999
-                    closest_planet = None
-                    for i in self.accessible_planets:
-                        dist = math.sqrt((i[0].getAbsoluteX() - graphics.player.x)**2 + (i[0].getAbsoluteY() - graphics.player.y)**2)
-                        if(dist < min_dist):
-                            min_dist = dist
-                            closest_planet = i
-
-                    if(closest_planet != None):
-                        self.angle = closest_planet[1]
-
-                        self.throw = True
-                        self.landing_count += 1 
-                        self.ressources["Charbonites"] -= self.fuel_consumption_throw
-                        self.vx = self.throw_speed * math.cos(self.angle)
-                        self.vy = self.throw_speed * math.sin(self.angle)
+                            self.throw = True
+                            self.landing_count += 1 
+                            self.ressources["Charbonites"] -= self.fuel_consumption_throw
+                            self.vx = self.throw_speed * math.cos(self.angle)
+                            self.vy = self.throw_speed * math.sin(self.angle)
