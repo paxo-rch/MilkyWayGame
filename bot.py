@@ -65,8 +65,6 @@ class Bot(Player):
         screen.blit(rotated_sprite, (posX(self.x)-rotated_sprite.get_width()//2, posY(self.y)-rotated_sprite.get_height()//2))
 
     def update(self):
-        clock = pygame.time.Clock()
-        while True:
             if self.throw:
                 for i in Object.objects:    # physics
                     if(i != self.planet):
@@ -151,4 +149,3 @@ class Bot(Player):
                             self.ressources["Charbonites"] -= self.fuel_consumption_throw
                             self.vx = self.throw_speed * math.cos(self.angle)
                             self.vy = self.throw_speed * math.sin(self.angle)
-            clock.tick(60)
