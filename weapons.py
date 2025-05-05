@@ -111,3 +111,51 @@ class Laser(Weapon):
                 pygame.draw.aaline(entities.screen, current_core_color, start_pos, end_pos)
             else:
                 pygame.draw.line(entities.screen, current_core_color, start_pos, end_pos, self.core_thickness)
+
+class DoubleLaser(Laser):
+    def __init__(self, planet, target):
+        super().__init__(planet, target)
+        self.glow_color = (0, 0, 255)
+
+    def drawTick(self):
+        """Draws the laser if it's active, with animation and AA effects."""
+        if self.state and self.current_target:
+            self.animation_timer += 1
+
+            # Calculate start and end points using graphics conversions
+            start_pos = (graphics.posX(self.planet.x), graphics.posY(self.planet.y))
+            end_pos = (graphics.posX(self.current_target.x), graphics.posY(self.current_target.y))
+
+            # --- Pulsation Calculation ---
+            pulse_factor = (sin(self.animation_timer * self.pulse_speed) + 1) / 2.0
+
+            current_glow_thickness = int(self.glow_thickness_min + (self.glow_thickness_max - self.glow_thickness_min) * pulse_factor)
+
+            current_core_color = (
+            int(self.core_color_dim[0] + (self.core_color_bright[0] - self.core_color_dim[0]) * pulse_factor),
+            int(self.core_color_dim[1] + (self.core_color_bright[1] - self.core_color_dim[1]) * pulse_factor),
+            int(self.core_color_dim[2] + (self.core_color_bright[2] - self.core_color_dim[2]) * pulse_factor)
+            )
+
+            # Draw the outer glow normally (width > 1, so AA not directly applicable)
+            pygame.draw.line(entities.screen, self.glow_color, start_pos, end_pos, current_glow_thickness)
+
+            # Draw the core with AA when possible. If core_thickness == 1, use aaline for antialiasing.
+            if self.core_thickness == 1:
+                pygame.draw.aaline(entities.screen, current_core_color, start_pos, end_pos)
+            else:
+                pygame.draw.line(entities.screen, current_core_color, start_pos, end_pos, self.core_thickness)
+
+            for i in range(2):
+                angle = atan2(self.current_target.y - self.planet.y, self.current_target.x - self.planet.x) + i * pi
+                new_x = self.planet.x + cos(angle) * self.range
+                new_y = self.planet.y + sin(angle) * self.range
+                new_end_pos = (graphics.posX(new_x), graphics.posY(new_y))
+                pygame.draw.line(entities.screen, self.glow_color, start_pos, new_end_pos, current_glow_thickness)
+
+                if self.core_thickness == 1:
+                    pygame.draw.aaline(entities.screen, current_core_color, start_pos, new_end_pos)
+                else:
+                    pygame.draw.line(entities.screen, current_core_color, start_pos, new_end_pos, self.core_thickness)
+
+
