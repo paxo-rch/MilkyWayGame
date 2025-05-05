@@ -147,8 +147,7 @@ class Player:
 
         self.cursor = [MAP_WIDTH/2, MAP_HEIGHT/2]
         self.zoom = 1
-
-
+        self.btn_delay = 0.5
     def draw(self):
         a_mvt = self.angle
 
@@ -168,15 +167,13 @@ class Player:
 
         if(not self.throw):
             pygame.draw.line(screen, (255, 255, 255), (posX(self.x), posY(self.y)), (posX(self.x + math.cos(self.angle) * self.projection_length), posY(self.y + math.sin(self.angle) * self.projection_length)))
-
-
     def update(self):
         box = None
         clock = pygame.time.Clock()
+        button_delay = 0
         while True:
             start = time.perf_counter()
             keys = pygame.key.get_pressed()
-
             if self.throw:
 
                 for i in Object.objects:
@@ -244,9 +241,9 @@ class Player:
                     else:
                         self.ressources["Charbonites"] -= self.fuel_consumption / 3
                 
-                if keys[pygame.K_r]:
+                if keys[pygame.K_r] and (time.time() > button_delay + self.btn_delay):
+                    button_delay = time.time()
                     self.rcs = not self.rcs
-                    time.sleep(0.1)
 
                 if self.rcs:
                     target_angle = math.atan2(self.vy,self.vx) + math.pi
@@ -268,7 +265,8 @@ class Player:
 
             else:
 
-                if (keys[pygame.K_SPACE] or keys[pygame.K_RETURN]) and self.ressources["Charbonites"] > self.fuel_consumption_throw and self.calculating == False:
+                if (keys[pygame.K_SPACE] or keys[pygame.K_RETURN]) and time.time() > button_delay + self.btn_delay and self.ressources["Charbonites"] > self.fuel_consumption_throw and self.calculating == False:
+                    button_delay = time.time()
                     self.throw = True
                     self.landing_count += 1 
                     self.ressources["Charbonites"] -= self.fuel_consumption_throw
@@ -276,19 +274,22 @@ class Player:
                     self.vy = self.throw_speed * math.sin(self.angle)
 
 
-                elif keys[pygame.K_s] and self.calculating == False:
+                elif keys[pygame.K_s] and time.time() > button_delay + self.btn_delay and self.calculating == False:
+                    button_delay = time.time()
                     self.calculating = True
                     self.traj = Text("Calcul de trajectoire en cours...", SCREEN_HEIGHT/2, SCREEN_WIDTH/2, 100,relative_coords=False,relative_zoom=False, color=(255,255,255))
                     sd = Sondes(Object.objects,self.sonde_number,self)
                     player.sonde = sd
                     threading.Thread(target=sd.run, args=()).start()
 
-                elif keys[pygame.K_c] and self.calculating == False:
+                elif keys[pygame.K_c] and time.time() > button_delay + self.btn_delay and self.calculating == False:
+                    button_delay = time.time()
                     self.accessible_planets = []
                     self.parent.accessible_planets_object = []
                     self.sonde = None
 
-                elif keys[pygame.K_m] and self.calculating == False:
+                elif keys[pygame.K_m] and time.time() > button_delay + self.btn_delay and self.calculating == False:
+                    button_delay = time.time()
                     self.map = not self.map
                     if self.map:
                         map_text = Text("Map",SCREEN_WIDTH/2.1, SCREEN_HEIGHT/15, 100,relative_coords=False,relative_zoom=False, color=(255,255,255))
@@ -303,12 +304,12 @@ class Player:
                         for i in self.map_objects:
                             i.destroy()
                         self.map_objects = []
-                    time.sleep(0.1)
 
-                elif keys[pygame.K_d]:
+                elif keys[pygame.K_d] and time.time() > button_delay + self.btn_delay:
+                    button_delay = time.time()
                     self.debug = not self.debug
-                    time.sleep(0.1)
-                elif not self.calculating and not self.map and keys[pygame.K_e]:
+                elif not self.calculating and not self.map and keys[pygame.K_e] and time.time() > button_delay + self.btn_delay:
+                    button_delay = time.time()
                     self.inventory_opened = not self.inventory_opened
                     if self.inventory_opened:
                         inventory_box = Box(SCREEN_WIDTH/4,SCREEN_HEIGHT/4,(SCREEN_WIDTH/2,SCREEN_HEIGHT/2),relative_coords=False,relative_zoom=False,background_color=(102, 102, 102),border_color=(102, 102, 102),border_radius=20,border_width=20)
@@ -316,7 +317,6 @@ class Player:
                     else:
                         inventory_box.destroy()
                         inventory_text.destroy()
-                    time.sleep(0.1)                
                 
                 mouseState = pygame.mouse.get_pressed()[0]
 

@@ -79,8 +79,11 @@ for i in range(PLANET_NUMBER):
 # The player is responsible for updating its position and throw state
 graphics.player = entities.Player(entities.Object.objects[0])
 entities.player = graphics.player
-
-bot_player = bot.Bot(entities.Object.objects[1])
+bots = []
+for i in range(1):
+    bot_player = bot.Bot(random.choice(entities.Object.objects))
+    threading.Thread(target=bot_player.update,args=()).start()
+    bots.append(bot_player)
 
 # Start the player thread
 threading.Thread(target=entities.player.update,args=()).start()
@@ -110,8 +113,7 @@ while True:
         if event.type == pygame.QUIT:
             pygame.quit()
             quit()
-    
-        if event.type == pygame.MOUSEWHEEL:
+        elif event.type == pygame.MOUSEWHEEL:
             if entities.player.zoom* ((event.y*0.2) +1) < 6 and entities.player.zoom* ((event.y*0.2) +1) > 0.1:
                 entities.player.zoom *= (event.y)*0.2 + 1
                 planets.Planet.update_images()
@@ -130,8 +132,8 @@ while True:
     for i in graphics.Image.imagelist:
         i.update()
     entities.player.draw()
-    bot_player.update()
-    bot_player.draw()
+    for i in bots:
+        i.draw()
     for i in sorted(graphics.hierarchy_list.keys()):
         for j in graphics.hierarchy_list[i]:
             j.update()
