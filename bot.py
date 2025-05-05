@@ -149,4 +149,3 @@ class Bot(Player):
                         self.ressources["Charbonites"] -= self.fuel_consumption_throw
                         self.vx = self.throw_speed * math.cos(self.angle)
                         self.vy = self.throw_speed * math.sin(self.angle)
-            pass
