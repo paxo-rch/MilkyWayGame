@@ -3,6 +3,7 @@ import entities
 import pygame
 import graphics
 from math import *
+import time 
 
 #
 #   Code for the weapons module:
@@ -158,4 +159,39 @@ class DoubleLaser(Laser):
                 else:
                     pygame.draw.line(entities.screen, current_core_color, start_pos, new_end_pos, self.core_thickness)
 
+
+class LaserGun(Weapon):
+    def __init__(self, planet, target):
+        super().__init__(planet, target)
+        self.fire_rate = 10  # shots per second
+        self.bullets = []
+        self.last_shot_time = 0
+
+    def shoot(self):
+        current_time = time.time()
+        if current_time - self.last_shot_time >= 1 / self.fire_rate:
+            bullet = {
+                "start_pos": (self.planet.x, self.planet.y),
+                "direction": atan2(self.target.y - self.planet.y, self.target.x - self.planet.x),
+                "speed": 300  # Arbitrary speed
+            }
+            self.bullets.append(bullet)
+            self.last_shot_time = current_time
+
+    def update(self):
+        self.shoot()
+        for bullet in self.bullets:
+            bullet["start_pos"] = (
+                bullet["start_pos"][0] + cos(bullet["direction"]) * bullet["speed"] * (1 / self.fire_rate),
+                bullet["start_pos"][1] + sin(bullet["direction"]) * bullet["speed"] * (1 / self.fire_rate)
+            )
+
+    def drawTick(self):
+        for bullet in self.bullets:
+            start_pos = (graphics.posX(bullet["start_pos"][0]), graphics.posY(bullet["start_pos"][1]))
+            end_pos = (
+                graphics.posX(bullet["start_pos"][0] + cos(bullet["direction"]) * 10),
+                graphics.posY(bullet["start_pos"][1] + sin(bullet["direction"]) * 10)
+            )
+            pygame.draw.line(entities.screen, (255, 0, 0), start_pos, end_pos, 3)
 
