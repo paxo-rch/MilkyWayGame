@@ -83,7 +83,8 @@ entities.player = graphics.player
 
 bot_player = bot.Bot(entities.Object.objects[1])
 
-laser = weapons.Laser(entities.Object.objects[0], entities.player)
+laser = weapons.Laser(entities.Object.objects[0], bot_player)
+missile = weapons.Missile(entities.Object.objects[0].x, entities.Object.objects[0].y, graphics.player)
 
 # Start the player thread
 threading.Thread(target=entities.player.update,args=()).start()
@@ -102,6 +103,8 @@ def update_ressources_box():
     # Mise a jour de la boite de ressources
     for i,txt in enumerate(textRessources):
         txt.setText(ressources.types[i] + ": " + str(int(graphics.player.ressources[ressources.types[i]])))
+
+r = 0
 
 planets.Planet.update_images()
 clock = pygame.time.Clock()
@@ -133,7 +136,7 @@ while True:
 
     for i in graphics.Image.imagelist:
         i.update()
-
+        
     weapons.Weapon.updateAll()
 
     bot_player.update()

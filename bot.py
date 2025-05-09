@@ -2,6 +2,7 @@ from entities import *
 import graphics
 import pygame
 import entities
+
 class Bot(Player):
     def __init__(self, planet):
         self.ai_state = 0 # 0=landed, 1=calculating, 2=throwing
