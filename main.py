@@ -113,7 +113,6 @@ while True:
     entities.Object.time()
 
 
-
     for i in entities.Object.objects:
         i.updateAll()
         i.drawAll()

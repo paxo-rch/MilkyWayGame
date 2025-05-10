@@ -107,8 +107,34 @@ class Text:
 
     def destroy(self):
         hierarchy_list[self.z].remove(self)
-
-
+class Button:
+    def __init__(self, text, x, y, size,box_size, relative_coords=True, relative_zoom=True,color=(255,255,255),transparent_bg=False,transparent_border=False,border_color=(255,255,255),background_color=(255,255,255),border_radius=0,border_width=1,master_object = None,z=1,callback=None):
+        self.font = pygame.font.SysFont(None, size)
+        self.text = text
+        self.color = color
+        self.size = size
+        self.box_size = box_size
+        self.relative_coords = relative_coords
+        self.relative_zoom = relative_zoom
+        self.render = self.font.render(self.text, True,pygame.Color(color[0],color[1],color[2]))
+        self.x = x
+        self.y = y
+        self.z = z
+        self.master_object = master_object
+        self.callback = callback
+        self.transparent_bg = transparent_bg
+        self.transparent_border = transparent_border
+        self.border_color = border_color
+        self.background_color = background_color
+        self.border_radius = border_radius
+        self.border_width = border_width
+        self.box = Box(self.x,self.y,self.box_size,self.relative_coords,self.relative_zoom,self.transparent_bg,self.transparent_border,self.border_color,self.background_color,self.border_radius,self.border_width,self.master_object,self.z)
+        text_width = self.render.get_width()
+        text_height = self.render.get_height()
+        self.text = Text(self.text,self.x+self.box_size[0]/2-text_width/2,self.y+self.box_size[1]/2-text_height/2,self.size,self.relative_coords,self.relative_zoom,self.color,master_object=self.box,z=self.z+1)
+    def destroy(self):
+        self.box.destroy()
+        self.text.destroy()
 class Image:
 
     def __init__(self,image,scale=0.05,fixed=False,x=0,y=0,z=1):

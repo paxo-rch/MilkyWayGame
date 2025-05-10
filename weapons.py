@@ -18,19 +18,19 @@ types = {
     },
     "MissileLauncher": {
         "icon": "assets/weapons/missile_launcher.png", # Placeholder path
-        "ressources": { "Ferrium": 5, "Charbonites": 2 } # Example costs
+        "ressources": { "Meganites": 5, "Charbonites": 2 } # Example costs
     },
     "PulseCannon": {
         "icon": "assets/weapons/pulse_cannon.png", # Placeholder path
-        "ressources": { "Plasmium": 3, "Ferrium": 1 } # Example costs
+        "ressources": { "Meganium": 3, "Meganites": 1 } # Example costs
     },
     "SlowField": {
         "icon": "assets/weapons/slow_field.png", # Placeholder path
-        "ressources": { "Aquarion": 4 } # Example costs
+        "ressources": { "Chromites": 4 } # Example costs
     },
     "MineLayer": {
         "icon": "assets/weapons/mine_layer.png", # Placeholder path
-        "ressources": { "Ferrium": 3, "Explosium": 2 } # Example costs (assuming Explosium exists)
+        "ressources": { "Meganites": 3, "Charbonium": 2 } # Example costs (assuming Explosium exists)
     }
 }
 
@@ -117,7 +117,7 @@ class Laser(Weapon):
             self.current_target = target
             # Apply damage directly here during the check
             # Ensure target has necessary attributes before trying to modify them
-            if hasattr(target, 'ressources') and "Charbonites" in target.ressources:
+            if hasattr(target, 'ressources') and "Charbonites" in target.ressources and self.current_target.throw:
                  target.ressources["Charbonites"] -= self.damage_per_tick # Example: Drains Charbonites
                  if target.ressources["Charbonites"] < 0: target.ressources["Charbonites"] = 0 # Prevent negative resources
             # Alternatively, apply health damage:

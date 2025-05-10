@@ -140,6 +140,7 @@ class Player:
         self.icon_rocket = pygame.image.load("assets/player/rocket.png")
         self.flame_animation = []
         self.i = 0
+        self.time_on_planet = 0
 
         self.debug = False
         # read the gif file
@@ -191,7 +192,9 @@ class Player:
                             self.vx = 0
                             self.vy = 0
                             self.throw = False
+                            self.thrust = False
                             self.planet = i
+                            self.time_on_planet = time.time()
                             for j in self.ressources:
                                 self.ressources[j] += i.reference.ressources[j]
                                 i.reference.ressources[j] = 0
@@ -241,7 +244,7 @@ class Player:
                         self.landing_count = 1
                         self.ressources["Charbonites"] = 100
                         self.throw = False
-                        self.thrust = False
+                        
                     else:
                         self.ressources["Charbonites"] -= self.fuel_consumption / 3
                 
@@ -262,6 +265,7 @@ class Player:
                              thrust_vy = math.sin(self.angle) * self.speed
                              self.vx += thrust_vx
                              self.vy += thrust_vy
+                             self.thrust
                 self.x += self.vx/10
                 self.y += self.vy/10
                 self.distance += math.sqrt((self.vx/10)**2 + (self.vy/10)**2)
@@ -269,7 +273,7 @@ class Player:
 
             else:
 
-                if (keys[pygame.K_SPACE] or keys[pygame.K_RETURN]) and time.time() > button_delay + self.btn_delay and self.ressources["Charbonites"] > self.fuel_consumption_throw and not self.calculating and not self.map and not self.inventory_opened:
+                if (keys[pygame.K_SPACE] or keys[pygame.K_RETURN]) and time.time() > button_delay + self.btn_delay and self.ressources["Charbonites"] > self.fuel_consumption_throw and not self.calculating and not self.map and not self.inventory_opened and time.time() > self.time_on_planet + 1:
                     button_delay = time.time()
                     self.throw = True
                     self.landing_count += 1 
@@ -319,6 +323,7 @@ class Player:
                         inventory_items = []
                         inventory_box = Box(SCREEN_WIDTH/6,SCREEN_HEIGHT/6,(SCREEN_WIDTH/1.5,SCREEN_HEIGHT/1.5),relative_coords=False,relative_zoom=False,background_color=(102, 102, 102),border_color=(102, 102, 102),border_radius=20,border_width=20,z=4)
                         box_ressource = Box(SCREEN_WIDTH/6+15,SCREEN_HEIGHT/4,(SCREEN_WIDTH/3-30,SCREEN_HEIGHT/1.5-100),relative_coords=False,relative_zoom=False,border_color=(51,51,51),background_color=(51,51,51),border_radius=20,border_width=20,z=5)
+                        box_planet_defense = Box(SCREEN_WIDTH/2+15,SCREEN_HEIGHT/4,(SCREEN_WIDTH/3-30,SCREEN_HEIGHT/1.5-100),relative_coords=False,relative_zoom=False,border_color=(51,51,51),background_color=(51,51,51),border_radius=20,border_width=20,z=5)
                         inventory_text = Text("Inventory",SCREEN_WIDTH/6+15,SCREEN_HEIGHT/6+15,100,relative_coords=False,relative_zoom=False,z=5)
                         n = 0
                         for i in self.ressources.keys():
@@ -330,10 +335,28 @@ class Player:
                             if icon != "":
                                 img = Image(pygame.transform.scale(pygame.image.load(icon), (50, 50)),scale=0.1,fixed=True, x = SCREEN_WIDTH/6+30, y = SCREEN_HEIGHT/4 + 7 + 50 * id, z = 5)
                                 inventory_items.append(img)
+                        item_count = len(weapons.types)
+                        button_height = int((SCREEN_HEIGHT / 1.5 - 112) / item_count)
+                        text_size = max(25, button_height // 2)
+                        
+                        for id, i in enumerate(weapons.types):
+                            color = (0,255,0)
+                            for j in weapons.types[i]["ressources"].keys():
+                                if self.ressources[j] < weapons.types[i]["ressources"][j]:
+                                    color = (255,0,0)
+                                    
+                            y_offset = SCREEN_HEIGHT / 4 + button_height * id - 12
+                            btn = Button("", SCREEN_WIDTH / 2 + 30, y_offset + 25, 25, (SCREEN_WIDTH / 3 - 60, button_height - 25), background_color=color, border_color=color, relative_coords=False, relative_zoom=False, border_radius=20, border_width=20, z=5)
+                            defense_text = Text(i, SCREEN_WIDTH / 2 + 45, y_offset + 35, int(text_size), relative_coords=False, relative_zoom=False, z=5)
+                            cost_text = Text("Cost: " + str(weapons.types[i]["ressources"]), SCREEN_WIDTH / 2 + 45, y_offset + 35 + int(text_size), int(text_size // 2), relative_coords=False, relative_zoom=False, z=5)
+                            inventory_items.append(btn)
+                            inventory_items.append(defense_text)
+                            inventory_items.append(cost_text)
                     else:
                         for i in inventory_items:
                             i.destroy()
                         inventory_items = []
+                        box_planet_defense.destroy()
                         box_ressource.destroy()
                         inventory_text.destroy()
                         inventory_box.destroy()
