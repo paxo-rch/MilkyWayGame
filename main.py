@@ -83,10 +83,11 @@ entities.player = graphics.player
 bots = []
 for i in range(1):
     bot_player = bot.Bot(random.choice(entities.Object.objects))
+    entities.bot_player = bot_player
     threading.Thread(target=bot_player.update,args=()).start()
     bots.append(bot_player)
 
-laser = weapons.Laser(entities.Object.objects[0], entities.player)
+laser = weapons.Laser(entities.Object.objects[0], bot_player)
 
 # Start the player thread
 threading.Thread(target=entities.player.update,args=()).start()

@@ -115,14 +115,7 @@ class Laser(Weapon):
                 self.animation_timer = 0
             self.state = True
             self.current_target = target
-            # Apply damage directly here during the check
-            # Ensure target has necessary attributes before trying to modify them
-            if hasattr(target, 'ressources') and "Charbonites" in target.ressources:
-                 target.ressources["Charbonites"] -= self.damage_per_tick # Example: Drains Charbonites
-                 if target.ressources["Charbonites"] < 0: target.ressources["Charbonites"] = 0 # Prevent negative resources
-            # Alternatively, apply health damage:
-            # if hasattr(target, 'health'):
-            #    target.health -= self.damage_per_tick
+            target.hp -= self.damage_per_tick
 
         else:
             if self.state and self.current_target == target:
@@ -274,7 +267,7 @@ class Missile(Weapon):
 
 
 class Projectile(Weapon):
-    def __init__(self, x, y, angle, speed, damage):
+    def __init__(self, x, y, angle, speed, damage, target):
         super().__init__(None, None)
         self.x = x
         self.y = y
@@ -284,10 +277,15 @@ class Projectile(Weapon):
         self.speed = speed
         self.damage = damage
         self.timeleft = entities.Object.t + 1
+        self.target = target
+        
 
     def onNearPass(self, target):
         self.x += cos(self.angle) * self.speed + self.basevx/10
         self.y += sin(self.angle) * self.speed + self.basevy/10
+        if(hypot(self.x - self.target.x, self.y - self.target.y) < 20):
+            target.applyDamage(self.damage)
+            print(f"Projectile hit target {target.hp}!")
         if(self.timeleft < entities.Object.t):
             self.is_active = False
             super().__del__()
