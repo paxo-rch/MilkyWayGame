@@ -291,7 +291,7 @@ class Player:
 
             else:
 
-                if (keys[pygame.K_SPACE] or keys[pygame.K_RETURN]) and time.time() > button_delay + self.btn_delay and self.ressources["Charbonites"] > self.fuel_consumption_throw and self.calculating == False:
+                if (keys[pygame.K_SPACE] or keys[pygame.K_RETURN]) and time.time() > button_delay + self.btn_delay and self.ressources["Charbonites"] > self.fuel_consumption_throw and not self.calculating and not self.map and not self.inventory_opened:
                     button_delay = time.time()
                     self.throw = True
                     self.landing_count += 1 
@@ -318,10 +318,10 @@ class Player:
                     button_delay = time.time()
                     self.map = not self.map
                     if self.map:
-                        map_text = Text("Map",SCREEN_WIDTH/2.1, SCREEN_HEIGHT/15, 100,relative_coords=False,relative_zoom=False, color=(255,255,255))
+                        map_text = Text("Map",SCREEN_WIDTH/2.1, SCREEN_HEIGHT/15, 100,relative_coords=False,relative_zoom=False, color=(255,255,255),z=2)
                         for i in Object.objects:
                             if i in self.accessible_planets_object:
-                                map_box = Box(i.x-50,i.y-50,(110,110),relative_zoom=True,relative_coords=True,transparent_bg=True,border_color=(0,255,0),border_width=10,border_radius=10)
+                                map_box = Box(i.x-50,i.y-50,(110,110),relative_zoom=True,relative_coords=True,transparent_bg=True,border_color=(0,255,0),border_width=10,border_radius=10,z=1)
                                 """else:
                                 map_box = Box(i.x-50,i.y-50,(110,110),relative_zoom=True,relative_coords=True,transparent_bg=True,border_color=(255,0,0),border_width=10,border_radius=10)"""
                                 self.map_objects.append(map_box)
@@ -334,16 +334,32 @@ class Player:
                 elif keys[pygame.K_d] and time.time() > button_delay + self.btn_delay:
                     button_delay = time.time()
                     self.debug = not self.debug
-                elif not self.calculating and not self.map and keys[pygame.K_e] and time.time() > button_delay + self.btn_delay:
+                elif not self.calculating and keys[pygame.K_e] and time.time() > button_delay + self.btn_delay:
                     button_delay = time.time()
                     self.inventory_opened = not self.inventory_opened
                     if self.inventory_opened:
-                        inventory_box = Box(SCREEN_WIDTH/4,SCREEN_HEIGHT/4,(SCREEN_WIDTH/2,SCREEN_HEIGHT/2),relative_coords=False,relative_zoom=False,background_color=(102, 102, 102),border_color=(102, 102, 102),border_radius=20,border_width=20)
-                        inventory_text = Text("Inventory",SCREEN_WIDTH/4,SCREEN_HEIGHT/4,100,relative_coords=False,relative_zoom=False,z=2)
+                        inventory_items = []
+                        inventory_box = Box(SCREEN_WIDTH/6,SCREEN_HEIGHT/6,(SCREEN_WIDTH/1.5,SCREEN_HEIGHT/1.5),relative_coords=False,relative_zoom=False,background_color=(102, 102, 102),border_color=(102, 102, 102),border_radius=20,border_width=20,z=4)
+                        box_ressource = Box(SCREEN_WIDTH/6+15,SCREEN_HEIGHT/4,(SCREEN_WIDTH/3-30,SCREEN_HEIGHT/1.5-100),relative_coords=False,relative_zoom=False,border_color=(51,51,51),background_color=(51,51,51),border_radius=20,border_width=20,z=5)
+                        inventory_text = Text("Inventory",SCREEN_WIDTH/6+15,SCREEN_HEIGHT/6+15,100,relative_coords=False,relative_zoom=False,z=5)
+                        n = 0
+                        for i in self.ressources.keys():
+                            inventory_ressource = Text(str(i)+": "+str(round(self.ressources[i],1)),SCREEN_WIDTH/6+90,SCREEN_HEIGHT/4 + 15  + 50*n,50,relative_coords=False,relative_zoom=False,z=5)
+                            inventory_items.append(inventory_ressource)
+                            n += 1
+                        for id, i in enumerate(ressources.types):
+                            icon = ressources.icons[i]
+                            if icon != "":
+                                img = Image(pygame.transform.scale(pygame.image.load(icon), (50, 50)),scale=0.1,fixed=True, x = SCREEN_WIDTH/6+30, y = SCREEN_HEIGHT/4 + 7 + 50 * id, z = 5)
+                                inventory_items.append(img)
                     else:
-                        inventory_box.destroy()
+                        for i in inventory_items:
+                            i.destroy()
+                        inventory_items = []
+                        box_ressource.destroy()
                         inventory_text.destroy()
-                
+                        inventory_box.destroy()
+
                 mouseState = pygame.mouse.get_pressed()[0]
 
                 # wheel for zoom
@@ -364,15 +380,15 @@ class Player:
 
                         if i != self.planet and click_dist_sq < click_radius**2:
                             self.selected_planet = i
-                            box = Box(i.x+20,i.y+20,(400,200),relative_zoom=False,border_radius=20,border_width=20,background_color=(60,60,60),border_color=(60,60,60))
-                            selected_box = Box(i.x-50,i.y-50,(110,110),relative_zoom=True,relative_coords=True,transparent_bg=True,border_color=(0,0,255),border_width=10,border_radius=10)
+                            box = Box(i.x+20,i.y+20,(400,200),relative_zoom=False,border_radius=20,border_width=20,background_color=(60,60,60),border_color=(60,60,60),z=2)
+                            selected_box = Box(i.x-50,i.y-50,(110,110),relative_zoom=True,relative_coords=True,transparent_bg=True,border_color=(0,0,255),border_width=10,border_radius=10,z=1)
                             if round(math.sqrt((i.getAbsoluteX() - self.x)**2 + (i.getAbsoluteY() - self.y)**2),1) < self.base_detection_range*1.5**self.detector_level:
                                 text = [f"Name: {i.reference.type}",f"Coords: x={i.x} y={i.y}",f"distance:{round(math.sqrt((i.getAbsoluteX() - self.x)**2 + (i.getAbsoluteY() - self.y)**2),1)}"]
                             else:
                                 text = [f"Name: ?",f"Coords: x=? y=?",f"distance:?"]
                             new_line_space = 0
                             for j in text:
-                                txt = Text(j,i.x+20,i.y+20+new_line_space,20,relative_zoom=False,master_object=box)
+                                txt = Text(j,i.x+25,i.y+25+new_line_space,20,relative_zoom=False,master_object=box,z=3)
                                 new_line_space+=20
                                 self.text_obj.append(txt)
                             for accessible_planet, launch_angle in self.accessible_planets: 

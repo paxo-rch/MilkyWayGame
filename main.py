@@ -24,18 +24,15 @@ planets.Planet.load_planets()
 
 fps = 0
 
-imagelist = []
-textRessources = []
-textlist = []
-path_list = []
+
 imageplanete = graphics.Image(pygame.image.load("assets/planets/planet1.png"),scale=0.1)
 imagelune = graphics.Image(pygame.image.load("assets/moons/moon1.png"))
 
 mytext = graphics.Text("Fuel: ", graphics.SCREEN_WIDTH*0.05, graphics.SCREEN_HEIGHT*0.9, 50, relative_coords=False,relative_zoom=False, color=(150,150,150))
 score = graphics.Text("Score: ", graphics.SCREEN_WIDTH*0.05, graphics.SCREEN_HEIGHT*0.05, 50, relative_coords=False,relative_zoom=False, color=(150,150,150))
 fps_text = graphics.Text("", graphics.SCREEN_WIDTH*0.05, graphics.SCREEN_HEIGHT*0.1, 50, relative_coords=False,relative_zoom=False, color=(150,150,150))
-update_fps = graphics.Text("", graphics.SCREEN_WIDTH*0.05, graphics.SCREEN_HEIGHT*0.2, 50, relative_coords=False,relative_zoom=False, color=(150,150,150))
-sonde_update = graphics.Text("", graphics.SCREEN_WIDTH*0.05, graphics.SCREEN_HEIGHT*0.15, 50, relative_coords=False,relative_zoom=False, color=(150,150,150))	
+update_fps = graphics.Text("", graphics.SCREEN_WIDTH*0.05, graphics.SCREEN_HEIGHT*0.15, 50, relative_coords=False,relative_zoom=False, color=(150,150,150))
+sonde_update = graphics.Text("", graphics.SCREEN_WIDTH*0.05, graphics.SCREEN_HEIGHT*0.2, 50, relative_coords=False,relative_zoom=False, color=(150,150,150))	
 sonde_time = graphics.Text("", graphics.SCREEN_WIDTH*0.05, graphics.SCREEN_HEIGHT*0.25, 50, relative_coords=False,relative_zoom=False, color=(150,150,150))
 
 for i in range(PLANET_NUMBER):
@@ -92,20 +89,9 @@ laser = weapons.Laser(entities.Object.objects[0], bot_player)
 # Start the player thread
 threading.Thread(target=entities.player.update,args=()).start()
 
-# Affichage des ressources
-for id, i in enumerate(ressources.types):
-    icon = ressources.icons[i]
-    if icon != "":
-        img = graphics.Image(pygame.transform.scale(pygame.image.load(icon), (50, 50)),scale=0.1,fixed=True, x = 0, y = 50 * id)
-        imagelist.append(img)
-        txt = graphics.Text(i + ": " + str(int(graphics.player.ressources[i])), 50, 50 * id + 10, 40, relative_coords=False,relative_zoom=False, color=(150,150,150))
-        textlist.append(txt)
-        textRessources.append(txt)
 
-def update_ressources_box():
-    # Mise a jour de la boite de ressources
-    for i,txt in enumerate(textRessources):
-        txt.setText(ressources.types[i] + ": " + str(int(graphics.player.ressources[ressources.types[i]])))
+
+
 
 r = 0
 
@@ -127,17 +113,12 @@ while True:
     graphics.screen.fill((10, 15, 30))
     entities.Object.time()
 
-    update_ressources_box()
 
-    for i in graphics.Image.imagelist:
-        i.update()
 
     for i in entities.Object.objects:
         i.updateAll()
         i.drawAll()
 
-    for i in graphics.Image.imagelist:
-        i.update()
     entities.player.draw()
     for i in bots:
         i.draw()
