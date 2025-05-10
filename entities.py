@@ -103,10 +103,10 @@ class Player:
         self.vx = 0
         self.vy = 0
         self.angle = 0
-        self.speed = 1
+        self.speed = 2
         self.turn_speed = 16
         self.throw_speed = 100
-        self.fuel_consumption = 0.1
+        self.fuel_consumption = 0.05
         self.fuel_consumption_throw = 10
         self.projection_length = 100
         self.throw = False
@@ -198,7 +198,7 @@ class Player:
             pygame.draw.line(screen, (255, 255, 255), (posX(self.x), posY(self.y)), (posX(self.x + math.cos(self.angle) * self.projection_length), posY(self.y + math.sin(self.angle) * self.projection_length)))
     
     def update(self):
-        if(self.hp <= 0):
+        if(self.hp <= 0 or self.ressources["Charbonites"] <= 0):
             self.die()
             
         box = None
@@ -291,13 +291,16 @@ class Player:
 
             else:
 
-                if (keys[pygame.K_SPACE] or keys[pygame.K_RETURN]) and time.time() > button_delay + self.btn_delay and self.ressources["Charbonites"] > self.fuel_consumption_throw and not self.calculating and not self.map and not self.inventory_opened:
-                    button_delay = time.time()
-                    self.throw = True
-                    self.landing_count += 1 
-                    self.ressources["Charbonites"] -= self.fuel_consumption_throw
-                    self.vx = self.throw_speed * math.cos(self.angle)
-                    self.vy = self.throw_speed * math.sin(self.angle)
+                if (keys[pygame.K_SPACE] or keys[pygame.K_RETURN]) and time.time() > button_delay + self.btn_delay and not self.calculating and not self.map and not self.inventory_opened:
+                    if (self.ressources["Charbonites"] > self.fuel_consumption_throw):
+                        button_delay = time.time()
+                        self.throw = True
+                        self.landing_count += 1 
+                        self.ressources["Charbonites"] -= self.fuel_consumption_throw
+                        self.vx = self.throw_speed * math.cos(self.angle)
+                        self.vy = self.throw_speed * math.sin(self.angle)
+                    else:
+                        self.die()
 
 
                 elif keys[pygame.K_s] and time.time() > button_delay + self.btn_delay and self.calculating == False:

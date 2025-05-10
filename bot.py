@@ -16,7 +16,7 @@ class Bot(Player):
         self.speed = 1
         self.turn_speed = 16
         self.throw_speed = 100
-        self.fuel_consumption = 0.1
+        self.fuel_consumption = 0.05
         self.fuel_consumption_throw = 10
         self.projection_length = 100
         self.throw = False
@@ -68,13 +68,10 @@ class Bot(Player):
         screen.blit(rotated_sprite, (posX(self.x)-rotated_sprite.get_width()//2, posY(self.y)-rotated_sprite.get_height()//2))
 
     def update(self):
-        if(self.hp <= 0):
+        if(self.hp <= 0 or self.ressources["Charbonites"] <= 0):
             self.die()
             self.ai_state = 0
-        if(self.ressources["Charbonites"] <= 0):
-            self.die()
-            self.ai_state = 0
-            
+        
         if self.throw:
             for i in Object.objects:    # physics
                 if(i != self.planet):
@@ -155,12 +152,13 @@ class Bot(Player):
                         self.angle = closest_planet[1]
 
                         self.throw = True
-                        self.landing_count += 1 
+                        self.landing_count += 1
+                        
                         self.ressources["Charbonites"] -= self.fuel_consumption_throw
                         self.vx = self.throw_speed * math.cos(self.angle)
                         self.vy = self.throw_speed * math.sin(self.angle)
         
         if(self.ai_state == 2 and self.reloadTime < Object.t - 0.15):
             self.angle = math.atan2(graphics.player.y - self.y, graphics.player.x - self.x)
-            weapons.Projectile(self.x, self.y, self.angle, 20, 10, graphics.player)
+            weapons.Projectile(self.x, self.y, self.angle, 20, 5, graphics.player)
             self.reloadTime = Object.t

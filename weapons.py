@@ -94,7 +94,7 @@ class Laser(Weapon):
     def __init__(self, planet, target):
         super().__init__(planet, target)
         self.name = "Laser"
-        self.range = 400
+        self.range = 4000
         self.state = False
         self.current_target = None
         self.animation_timer = 0
@@ -285,6 +285,7 @@ class Projectile(Weapon):
         self.y += sin(self.angle) * self.speed + self.basevy/10
         if(hypot(self.x - self.target.x, self.y - self.target.y) < 20):
             target.applyDamage(self.damage)
+            super().__del__()
             print(f"Projectile hit target {target.hp}!")
         if(self.timeleft < entities.Object.t):
             self.is_active = False
@@ -298,7 +299,7 @@ class Projectile(Weapon):
         # Draw the segment as a line
         start_pos = (graphics.posX(self.x), graphics.posY(self.y))
         end_pos = (graphics.posX(end_x), graphics.posY(end_y))
-        pygame.draw.line(entities.screen, (255, 255, 255), start_pos, end_pos, 2)  # White line with 2px thickness
+        pygame.draw.line(entities.screen, (255, 10, 50), start_pos, end_pos, 2)  # White line with 2px thickness
 
 
 
