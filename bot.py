@@ -3,6 +3,16 @@ import graphics
 import pygame
 import entities
 
+min_bot_ressources = {
+    "Chromites": 25,
+    "Chromium": 25,
+    "Charbonites": 30,
+    "Charbonium": 20,
+    "Meganites": 15,
+    "Meganium": 15,
+    "Ultranium": 0,
+}
+
 class Bot(Player):
     def __init__(self, planet):
         self.ai_state = 0 # 0=landed, 1=calculating, 2=throwing
@@ -140,13 +150,20 @@ class Bot(Player):
                 self.ai_state = 2
             
                 if(len(self.accessible_planets) > 0):
+
                     min_dist = 999999999
                     closest_planet = None
-                    for i in self.accessible_planets:
-                        dist = math.sqrt((i[0].getAbsoluteX() - graphics.player.x)**2 + (i[0].getAbsoluteY() - graphics.player.y)**2)
-                        if(dist < min_dist):
-                            min_dist = dist
-                            closest_planet = i
+
+                    if all(self.ressources[key] >= min_bot_ressources[key] for key in self.ressources):
+                        for i in self.accessible_planets:
+                            dist = math.sqrt((i[0].getAbsoluteX() - graphics.player.x)**2 + (i[0].getAbsoluteY() - graphics.player.y)**2)
+                            if(dist < min_dist):
+                                min_dist = dist
+                                closest_planet = i
+                    
+                    else:
+                        closest_planet = self.accessible_planets[random.randint(0, len(self.accessible_planets)-1)]
+                                
 
                     if(closest_planet != None):
                         self.angle = closest_planet[1]
