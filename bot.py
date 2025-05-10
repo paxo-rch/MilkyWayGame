@@ -34,7 +34,7 @@ class Bot(Player):
         self.landing_count = 1
         self.distance = 0
         self.hp = 100
-
+        self.imprecision = 0.1
         #Ship level
         self.detector_level = 10
         self.base_detection_range = 1000
@@ -177,5 +177,5 @@ class Bot(Player):
         
         if(self.ai_state == 2 and self.reloadTime < Object.t - 0.15):
             self.angle = math.atan2(graphics.player.y - self.y, graphics.player.x - self.x)
-            weapons.Projectile(self.x, self.y, self.angle, 20, 5, graphics.player)
+            weapons.Projectile(self.x, self.y, self.angle+random.uniform(-self.imprecision, self.imprecision), 20, 5, graphics.player)
             self.reloadTime = Object.t
