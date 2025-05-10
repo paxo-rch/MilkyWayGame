@@ -8,6 +8,7 @@ from graphics import *
 import gui
 
 import ressources
+import weapons
 
 class Object:
     t = 0
@@ -26,6 +27,7 @@ class Object:
         self.parent = None
         self.children = []
         self.reference = None
+        self.weapons = []
         self.rotation = random.random() * 2 * math.pi
 
 
@@ -109,6 +111,8 @@ class Player:
         self.thrust = False
         self.landing_count = 1
         self.distance = 0
+
+        self.weapons = []
 
         #Ship level
         self.detector_level = 10
@@ -416,6 +420,11 @@ class Player:
                 rel_y = mouse_pos[1] - SCREEN_HEIGHT/2
                 if pygame.mouse.get_pressed()[2]:
                     self.angle = math.atan2(rel_y,rel_x)
+
+            if(self.throw and pygame.mouse.get_pressed()[0]):
+                weapons.Projectile(self.x, self.y, self.angle, 20, 0.1)
+            
+
             if keys[pygame.K_LEFT]:
                     self.angle -= self.turn_speed * math.pi / 360
             elif keys[pygame.K_RIGHT]:

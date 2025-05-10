@@ -92,6 +92,8 @@ threading.Thread(target=entities.player.update,args=()).start()
 
 
 
+r = 0
+
 planets.Planet.update_images()
 clock = pygame.time.Clock()
 while True:
