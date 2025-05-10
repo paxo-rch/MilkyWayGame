@@ -10,6 +10,8 @@ import gui
 import ressources
 import weapons
 
+bot_player = None
+
 class Object:
     t = 0
     G = 1
@@ -101,10 +103,10 @@ class Player:
         self.vx = 0
         self.vy = 0
         self.angle = 0
-        self.speed = 1
+        self.speed = 2
         self.turn_speed = 16
         self.throw_speed = 100
-        self.fuel_consumption = 0.1
+        self.fuel_consumption = 0.05
         self.fuel_consumption_throw = 10
         self.projection_length = 100
         self.throw = False
@@ -113,6 +115,7 @@ class Player:
         self.distance = 0
 
         self.weapons = []
+        self.hp = 100
 
         #Ship level
         self.detector_level = 10
@@ -153,6 +156,28 @@ class Player:
         self.cursor = [MAP_WIDTH/2, MAP_HEIGHT/2]
         self.zoom = 1
         self.btn_delay = 0.5
+
+        self.reloadTime = Object.t
+    
+    def die(self):
+        self.hp = 100
+        print("E died")
+
+        self.x = self.spawn_planet.getAbsoluteX()
+        self.y = self.spawn_planet.getAbsoluteY()
+        self.score = 0
+        self.distance = 0
+        self.landing_count = 1
+        self.ressources["Charbonites"] = 100
+        self.throw = False
+        self.thrust = False
+
+    def applyDamage(self, damage):
+        self.hp -= damage
+        if self.hp <= 0:
+            self.die()
+            
+
     def draw(self):
         a_mvt = self.angle
 
@@ -172,7 +197,11 @@ class Player:
 
         if(not self.throw):
             pygame.draw.line(screen, (255, 255, 255), (posX(self.x), posY(self.y)), (posX(self.x + math.cos(self.angle) * self.projection_length), posY(self.y + math.sin(self.angle) * self.projection_length)))
+    
     def update(self):
+        if(self.hp <= 0 or self.ressources["Charbonites"] <= 0):
+            self.die()
+            
         box = None
         clock = pygame.time.Clock()
         button_delay = 0
@@ -236,17 +265,10 @@ class Player:
 
                 else:
                     self.thrust = False
-                    if self.ressources["Charbonites"] < self.fuel_consumption /3:
-                        self.x = self.spawn_planet.getAbsoluteX()
-                        self.y = self.spawn_planet.getAbsoluteY()
-                        self.score = 0
-                        self.distance = 0
-                        self.landing_count = 1
-                        self.ressources["Charbonites"] = 100
-                        self.throw = False
-                        
+                    if self.ressources["Charbonites"] < self.fuel_consumption /5:
+                        self.die()
                     else:
-                        self.ressources["Charbonites"] -= self.fuel_consumption / 3
+                        self.ressources["Charbonites"] -= self.fuel_consumption / 5
                 
                 if keys[pygame.K_r] and (time.time() > button_delay + self.btn_delay):
                     button_delay = time.time()
@@ -273,13 +295,16 @@ class Player:
 
             else:
 
-                if (keys[pygame.K_SPACE] or keys[pygame.K_RETURN]) and time.time() > button_delay + self.btn_delay and self.ressources["Charbonites"] > self.fuel_consumption_throw and not self.calculating and not self.map and not self.inventory_opened and time.time() > self.time_on_planet + 1:
-                    button_delay = time.time()
-                    self.throw = True
-                    self.landing_count += 1 
-                    self.ressources["Charbonites"] -= self.fuel_consumption_throw
-                    self.vx = self.throw_speed * math.cos(self.angle)
-                    self.vy = self.throw_speed * math.sin(self.angle)
+                if (keys[pygame.K_SPACE] or keys[pygame.K_RETURN]) and time.time() > button_delay + self.btn_delay and not self.calculating and not self.map and not self.inventory_opened:
+                    if (self.ressources["Charbonites"] > self.fuel_consumption_throw):
+                        button_delay = time.time()
+                        self.throw = True
+                        self.landing_count += 1 
+                        self.ressources["Charbonites"] -= self.fuel_consumption_throw
+                        self.vx = self.throw_speed * math.cos(self.angle)
+                        self.vy = self.throw_speed * math.sin(self.angle)
+                    else:
+                        self.die()
 
 
                 elif keys[pygame.K_s] and time.time() > button_delay + self.btn_delay and self.calculating == False:
@@ -444,8 +469,9 @@ class Player:
                 if pygame.mouse.get_pressed()[2]:
                     self.angle = math.atan2(rel_y,rel_x)
 
-            if(self.throw and pygame.mouse.get_pressed()[0]):
-                weapons.Projectile(self.x, self.y, self.angle, 20, 0.1)
+            if(self.throw and pygame.mouse.get_pressed()[0] and self.reloadTime < Object.t - 0.05):
+                weapons.Projectile(self.x, self.y, self.angle, 20, 10, bot_player)
+                self.reloadTime = Object.t
             
 
             if keys[pygame.K_LEFT]:
