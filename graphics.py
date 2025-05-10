@@ -110,16 +110,18 @@ class Text:
 
 
 class Image:
-    imagelist = []
 
-    def __init__(self,image,scale=0.05,fixed=False,x=0,y=0):
+    def __init__(self,image,scale=0.05,fixed=False,x=0,y=0,z=1):
         self.x = x
         self.y = y
+        self.z = z
         self.fixed = fixed
         self.scale = scale
         self.image = image
         self.scaled_image = None
-        Image.imagelist.append(self)
+        if z not in hierarchy_list.keys():
+            hierarchy_list[z] = []
+        hierarchy_list[z].append(self)
 
 
     def update(self):
@@ -132,4 +134,4 @@ class Image:
 
 
     def destroy(self):
-        Image.imagelist.remove(self)
+        hierarchy_list[self.z].remove(self)
