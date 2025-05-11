@@ -39,7 +39,7 @@ class Bot(Player):
         self.imprecision = 0
         #Ship level
         self.detector_level = 10
-        self.base_detection_range = 1000
+        self.base_detection_range = 2000
 
         #Ressources
         self.ressources = {i: 0 for i in ressources.types}
@@ -193,7 +193,7 @@ class Bot(Player):
                         self.vx = self.throw_speed * math.cos(self.angle)
                         self.vy = self.throw_speed * math.sin(self.angle)
         
-        if(self.ai_state == 2 and self.reloadTime < Object.t - 0.15):
+        if(self.ai_state == 2 and self.reloadTime < Object.t - 0.15) and graphics.player.throw and math.sqrt((graphics.player.x - self.x)**2 + (graphics.player.y - self.y)**2) < self.base_detection_range:
             self.angle = math.atan2(graphics.player.y - self.y, graphics.player.x - self.x)
             weapons.Projectile(self.x, self.y, self.angle+random.uniform(-self.imprecision, self.imprecision), 20, 5, graphics.player)
             self.reloadTime = Object.t
