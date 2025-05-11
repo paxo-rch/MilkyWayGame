@@ -27,14 +27,15 @@ class Bot(Player):
         self.turn_speed = 16
         self.throw_speed = 100
         self.fuel_consumption = 0.05
-        self.fuel_consumption_throw = 10
+        self.fuel_consumption_throw = 5
         self.projection_length = 100
         self.throw = False
         self.thrust = False
         self.landing_count = 1
+        self.visited_planets = [[planet.getAbsoluteX(), planet.getAbsoluteY()]]
         self.distance = 0
         self.hp = 100
-        self.imprecision = 0.1
+        self.imprecision = 0
         #Ship level
         self.detector_level = 10
         self.base_detection_range = 1000
@@ -160,9 +161,25 @@ class Bot(Player):
                             if(dist < min_dist):
                                 min_dist = dist
                                 closest_planet = i
+                                self.ressources["Charbonites"]-=10
                     
                     else:
-                        closest_planet = self.accessible_planets[random.randint(0, len(self.accessible_planets)-1)]
+                        min_dist = 999999999
+                        
+                        for i in self.accessible_planets:
+                            
+                            if [i[0].getAbsoluteX(), i[0].getAbsoluteY()] not in self.visited_planets:
+                                dist = math.sqrt((i[0].getAbsoluteX() - self.x)**2 + (i[0].getAbsoluteY() - self.y)**2)
+                                if dist < min_dist:
+                                    min_dist = dist
+                                    closest_planet = i
+
+                        if closest_planet == None:
+                            closest_planet = self.accessible_planets[random.randint(0, len(self.accessible_planets)-1)]
+
+                        self.visited_planets.append([closest_planet[0].getAbsoluteX(), closest_planet[0].getAbsoluteY()])
+                    
+                    
                                 
 
                     if(closest_planet != None):
@@ -170,7 +187,7 @@ class Bot(Player):
 
                         self.throw = True
                         self.landing_count += 1
-                        
+
                         self.ressources["Charbonites"] -= self.fuel_consumption_throw
                         self.vx = self.throw_speed * math.cos(self.angle)
                         self.vy = self.throw_speed * math.sin(self.angle)

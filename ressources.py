@@ -27,7 +27,7 @@ def generate_ressources(planet_type):
         ressources = {
             "Chromites": 10,
             "Chromium": 10,
-            "Charbonites": 20,
+            "Charbonites": 60,
             "Charbonium": 20,
             "Meganites": 5,
             "Meganium": 5,
@@ -37,7 +37,7 @@ def generate_ressources(planet_type):
         ressources = {
             "Chromites": 5,
             "Chromium": 5,
-            "Charbonites": 0,
+            "Charbonites": 20,
             "Charbonium": 0,
             "Meganites": 10,
             "Meganium": 10,
@@ -57,7 +57,7 @@ def generate_ressources(planet_type):
         ressources = {
             "Chromites": 10,
             "Chromium": 5,
-            "Charbonites": 5,
+            "Charbonites": 15,
             "Charbonium": 5,
             "Meganites": 20,
             "Meganium": 20,
@@ -67,7 +67,7 @@ def generate_ressources(planet_type):
         ressources = {
             "Chromites": 10,
             "Chromium": 5,
-            "Charbonites": 15,
+            "Charbonites": 50,
             "Charbonium": 20,
             "Meganites": 5,
             "Meganium": 5,
@@ -77,7 +77,7 @@ def generate_ressources(planet_type):
         ressources = {
             "Chromites": 5,
             "Chromium": 10,
-            "Charbonites": 0,
+            "Charbonites": 10,
             "Charbonium": 1,
             "Meganites": 10,
             "Meganium": 10,
