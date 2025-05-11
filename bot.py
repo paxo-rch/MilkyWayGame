@@ -34,7 +34,8 @@ class Bot(Player):
         self.landing_count = 1
         self.visited_planets = [[planet.getAbsoluteX(), planet.getAbsoluteY()]]
         self.distance = 0
-        self.hp = 100
+        self.hull_hp = 100
+        self.shield_hp = 0
         self.imprecision = 0
         #Ship level
         self.detector_level = 10
@@ -79,7 +80,7 @@ class Bot(Player):
         screen.blit(rotated_sprite, (posX(self.x)-rotated_sprite.get_width()//2, posY(self.y)-rotated_sprite.get_height()//2))
 
     def update(self):
-        if(self.hp <= 0 or self.ressources["Charbonites"] <= 0):
+        if(self.hull_hp <= 0 or self.ressources["Charbonites"] <= 0):
             self.die()
             self.ai_state = 0
         

@@ -115,7 +115,8 @@ class Player:
         self.distance = 0
 
         self.weapons = []
-        self.hp = 100
+        self.hull_hp = 100
+        self.shield_hp = 100
 
         #Ship level
         self.detector_level = 10
@@ -160,9 +161,8 @@ class Player:
         self.reloadTime = Object.t
     
     def die(self):
-        self.hp = 100
-        print("E died")
-
+        self.hull_hp = 100
+        self.shield_hp = 100
         self.x = self.spawn_planet.getAbsoluteX()
         self.y = self.spawn_planet.getAbsoluteY()
         self.score = 0
@@ -173,10 +173,15 @@ class Player:
         self.thrust = False
 
     def applyDamage(self, damage):
-        self.hp -= damage
-        if self.hp <= 0:
-            self.die()
-            
+        if self.throw:
+            if self.shield_hp > 0:
+                self.shield_hp -= damage*0.5
+                pygame.draw.circle(screen, (0, 0, 255), (posX(self.x), posY(self.y)), 30 * player.zoom, width=3)
+                return
+            self.shield_hp = 0
+            self.hull_hp -= damage
+            if self.hull_hp <= 0:
+                self.die()
 
     def draw(self):
         a_mvt = self.angle
@@ -199,7 +204,7 @@ class Player:
             pygame.draw.line(screen, (255, 255, 255), (posX(self.x), posY(self.y)), (posX(self.x + math.cos(self.angle) * self.projection_length), posY(self.y + math.sin(self.angle) * self.projection_length)))
     
     def update(self):
-        if(self.hp <= 0 or self.ressources["Charbonites"] <= 0):
+        if(self.hull_hp <= 0 or self.ressources["Charbonites"] <= 0):
             self.die()
             
         box = None
@@ -371,7 +376,7 @@ class Player:
                                     color = (255,0,0)
                                     
                             y_offset = SCREEN_HEIGHT / 4 + button_height * id - 12
-                            btn = Button("", SCREEN_WIDTH / 2 + 30, y_offset + 25, 25, (SCREEN_WIDTH / 3 - 60, button_height - 25), background_color=color, border_color=color, relative_coords=False, relative_zoom=False, border_radius=20, border_width=20, z=5)
+                            btn = Button("", SCREEN_WIDTH / 2 + 30, y_offset + 25, 25, (SCREEN_WIDTH / 3 - 60, button_height - 25), background_color=color, border_color=color, relative_coords=False, relative_zoom=False, border_radius=20, border_width=20, z=5,callback=self.clicked)
                             defense_text = Text(i, SCREEN_WIDTH / 2 + 45, y_offset + 35, int(text_size), relative_coords=False, relative_zoom=False, z=5)
                             cost_text = Text("Cost: " + str(weapons.types[i]["ressources"]), SCREEN_WIDTH / 2 + 45, y_offset + 35 + int(text_size), int(text_size // 2), relative_coords=False, relative_zoom=False, z=5)
                             inventory_items.append(btn)
@@ -660,7 +665,7 @@ class Sondes:
 
             self.parent.calculating = False # Signal completion
 
-            if hasattr(self.parent,"debug") and hasattr(gui, "sonde_time") and hasattr(gui, "sonde_update"):
+            if hasattr(self.parent,"debug"):
                 gui.sonde_time.setText("Recon Time: " + str(round(time.perf_counter() - s_time, 3)))
                 gui.sonde_update.setText("SUS: " + str(round(1/end)) if end > 0 else "SUS: inf")
             else: # Clear debug texts if debug is off

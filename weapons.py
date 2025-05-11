@@ -17,19 +17,15 @@ types = {
         "ressources": { "Ultranium": 1, }
     },
     "MissileLauncher": {
-        "icon": "assets/weapons/missile_launcher.png", # Placeholder path
         "ressources": { "Meganites": 5, "Charbonites": 2 } # Example costs
     },
     "PulseCannon": {
-        "icon": "assets/weapons/pulse_cannon.png", # Placeholder path
         "ressources": { "Meganium": 3, "Meganites": 1 } # Example costs
     },
     "SlowField": {
-        "icon": "assets/weapons/slow_field.png", # Placeholder path
         "ressources": { "Chromites": 4 } # Example costs
     },
     "MineLayer": {
-        "icon": "assets/weapons/mine_layer.png", # Placeholder path
         "ressources": { "Meganites": 3, "Charbonium": 2 } # Example costs (assuming Explosium exists)
     }
 }
@@ -115,7 +111,7 @@ class Laser(Weapon):
                 self.animation_timer = 0
             self.state = True
             self.current_target = target
-            target.hp -= self.damage_per_tick
+            target.hull_hp -= self.damage_per_tick
 
         else:
             if self.state and self.current_target == target:
@@ -286,7 +282,6 @@ class Projectile(Weapon):
         if(hypot(self.x - self.target.x, self.y - self.target.y) < 20):
             target.applyDamage(self.damage)
             super().__del__()
-            print(f"Projectile hit target {target.hp}!")
         if(self.timeleft < entities.Object.t):
             self.is_active = False
             super().__del__()

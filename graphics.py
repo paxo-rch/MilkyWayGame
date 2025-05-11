@@ -1,4 +1,5 @@
 import pygame
+import time
 
 MAP_SCALE = 10
 MAP_WIDTH = 1080 * MAP_SCALE
@@ -12,6 +13,7 @@ screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
 player = None # Placeholder for the player object
 
 hierarchy_list = {}
+buttons = []
 
 def posX(x):
     return SCREEN_WIDTH//2 + (x - player.cursor[0]) * player.zoom
@@ -132,9 +134,18 @@ class Button:
         text_width = self.render.get_width()
         text_height = self.render.get_height()
         self.text = Text(self.text,self.x+self.box_size[0]/2-text_width/2,self.y+self.box_size[1]/2-text_height/2,self.size,self.relative_coords,self.relative_zoom,self.color,master_object=self.box,z=self.z+1)
+        if self.callback != None:
+            buttons.append(self)
+            self.click_timer = 0
     def destroy(self):
         self.box.destroy()
         self.text.destroy()
+        if self.callback != None:
+            buttons.remove(self)
+    def update(self):
+        if self.callback != None and pygame.mouse.get_pressed()[0] and self.box.render_border.collidepoint(pygame.mouse.get_pos()) and time.time() > self.click_timer + 1:
+                self.click_timer = time.time()
+                self.callback()
 class Image:
 
     def __init__(self,image,scale=0.05,fixed=False,x=0,y=0,z=1):
@@ -151,12 +162,16 @@ class Image:
 
 
     def update(self):
-        if(self.fixed):
-            screen.blit(self.image, (self.x,self.y))
-            return
-        
-        if self.image is not None:
+
+        if self.image is not None and self.fixed == False:
             self.scaled_image = pygame.transform.scale(self.image,(self.image.get_width()*player.zoom*self.scale,self.image.get_height()*player.zoom*self.scale))
+        elif self.image is not None and self.fixed == True:
+            self.scaled_image = pygame.transform.scale(self.image,(self.image.get_width()*self.scale,self.image.get_height()*self.scale))
+
+        if self.fixed:
+            screen.blit(self.scaled_image, (self.x,self.y))
+        else:
+            screen.blit(self.scaled_image, (posX(self.x), posY(self.y)))
 
 
     def destroy(self):

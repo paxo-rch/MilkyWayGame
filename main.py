@@ -28,12 +28,8 @@ fps = 0
 imageplanete = graphics.Image(pygame.image.load("assets/planets/planet1.png"),scale=0.1)
 imagelune = graphics.Image(pygame.image.load("assets/moons/moon1.png"))
 
-mytext = graphics.Text("Fuel: ", graphics.SCREEN_WIDTH*0.05, graphics.SCREEN_HEIGHT*0.9, 50, relative_coords=False,relative_zoom=False, color=(150,150,150))
-score = graphics.Text("Score: ", graphics.SCREEN_WIDTH*0.05, graphics.SCREEN_HEIGHT*0.05, 50, relative_coords=False,relative_zoom=False, color=(150,150,150))
-fps_text = graphics.Text("", graphics.SCREEN_WIDTH*0.05, graphics.SCREEN_HEIGHT*0.1, 50, relative_coords=False,relative_zoom=False, color=(150,150,150))
-update_fps = graphics.Text("", graphics.SCREEN_WIDTH*0.05, graphics.SCREEN_HEIGHT*0.15, 50, relative_coords=False,relative_zoom=False, color=(150,150,150))
-sonde_update = graphics.Text("", graphics.SCREEN_WIDTH*0.05, graphics.SCREEN_HEIGHT*0.2, 50, relative_coords=False,relative_zoom=False, color=(150,150,150))	
-sonde_time = graphics.Text("", graphics.SCREEN_WIDTH*0.05, graphics.SCREEN_HEIGHT*0.25, 50, relative_coords=False,relative_zoom=False, color=(150,150,150))
+
+
 
 for i in range(PLANET_NUMBER):
     types = list(planets.Planet.types.keys())
@@ -78,7 +74,7 @@ for i in range(PLANET_NUMBER):
 graphics.player = entities.Player(entities.Object.objects[0])
 entities.player = graphics.player
 bots = []
-for i in range(1):
+for i in range(10):
     bot_player = bot.Bot(random.choice(entities.Object.objects))
     entities.bot_player = bot_player
     threading.Thread(target=bot_player.update,args=()).start()
@@ -129,17 +125,20 @@ while True:
     for i in sorted(graphics.hierarchy_list.keys()):
         for j in graphics.hierarchy_list[i]:
             j.update()
+    for i in graphics.buttons:
+        i.update()
 
-
-    mytext.setText("Fuel: " + str(round(entities.player.ressources["Charbonites"],1)))
-    score.setText("Score: " + str(entities.player.score))
+    gui.mytext.setText(str(round(entities.player.ressources["Charbonites"],1)))
+    gui.score.setText("Score: " + str(entities.player.score))
+    gui.hull_pv.setText(str(entities.player.hull_hp))
+    gui.shield_pv.setText(str(entities.player.shield_hp))
     if entities.player.debug:
-        fps_text.setText("FPS: " + str(round(1/fps)))
+        gui.fps_text.setText("FPS: " + str(round(1/fps)))
     else:
-        fps_text.setText("")
-        update_fps.setText("")
-        sonde_update.setText("")
-        sonde_time.setText("")
+        gui.fps_text.setText("")
+        gui.update_fps.setText("")
+        gui.sonde_update.setText("")
+        gui.sonde_time.setText("")
     
     clock.tick(60)
 
