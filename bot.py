@@ -213,5 +213,5 @@ class Bot(Player):
         
         if(self.ai_state == 2 and self.reloadTime < Object.t - 0.15) and graphics.player.throw and math.sqrt((graphics.player.x - self.x)**2 + (graphics.player.y - self.y)**2) < self.base_detection_range:
             self.angle = math.atan2(graphics.player.y - self.y, graphics.player.x - self.x)
-            weapons.Projectile(self.x, self.y, self.angle+random.uniform(-self.imprecision, self.imprecision), 20, 5, graphics.player)
+            weapons.Projectile(self.x, self.y, self.angle+random.uniform(-self.imprecision, self.imprecision), 20, 5, [graphics.player])
             self.reloadTime = Object.t
