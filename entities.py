@@ -193,23 +193,21 @@ class Player:
 
     def applyDamage(self, damage):
         # Apply damage, prioritizing shields
-        if(self.shield_hp - damage <= 0):
+        if self.shield_hp > 0 and (self.shield_hp - damage*0.5 <= 0):
             # If shield breaks, remaining damage goes to hull
-            hull_damage = damage - self.shield_hp
+            hull_damage = damage*0.5 - self.shield_hp
             self.shield_hp = 0
             self.hull_hp -= hull_damage
             # Visual feedback for shield breaking (optional, not in this snippet)
-            return
 
-        if self.shield_hp > 0:
+        elif self.shield_hp > 0:
             # Apply half damage to shield if shield is up
             self.shield_hp -= damage*0.5
             # Draw a visual indicator for shield hit
             pygame.draw.circle(screen, (0, 0, 255), (posX(self.x), posY(self.y)), 30 * player.zoom, width=3)
-            return
         # If shield is already down, apply full damage to hull
-        self.shield_hp = 0 # Ensure shield is 0
-        self.hull_hp -= damage
+        else:
+            self.hull_hp -= damage
         if self.hull_hp <= 0:
             self.die() # Die if hull is depleted
 
@@ -602,7 +600,10 @@ class Player:
                 if player.ressources[j] < weapons.types[weapon]["ressources"][j]:
                     return # Cannot buy if resources are insufficient
             # If resources are sufficient and weapon is not already present:
-            weapons.Laser(player.planet, bot_players) # Create the weapon instance (assuming Laser is the type bought)
+            if weapon == "Laser":
+                weapons.Laser(self.planet, bot_players) # Create the weapon instance (assuming Laser is the type bought)
+            elif weapon == "MineLayer":
+                weapons.MineLayer(self.planet, bot_players)
             player.planet.weapons_name.append(weapon) # Add weapon name to planet's list
             # Deduct resources
             for i in weapons.types[weapon]["ressources"].keys():
@@ -653,7 +654,6 @@ class Sondes:
         # Populate the planets array with target planet positions
         for i in range(len(self.planet_copy)):
             self.planets[i] = [self.planet_copy[i].x,self.planet_copy[i].y]
-
 
     def run(self):
         # Main simulation loop for sondes, runs in a separate thread

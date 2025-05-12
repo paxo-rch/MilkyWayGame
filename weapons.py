@@ -11,16 +11,6 @@ import time # Potentially useful for cooldowns, using frame counter for now
 #   This module contains the classes and functions related to the weapons in the game.
 #
 
-types = {
-    "Laser": {
-        "icon": "assets/weapons/laser.png",
-        "ressources": { "Ultranium": 10, }
-    },
-    "MineLayer": {
-        "ressources": { "Meganites": 10, "Charbonium": 6 } # Example costs (assuming Explosium exists)
-    }
-}
-
 # --- Base Weapon Class (Unchanged) ---
 class Weapon:
     weapons = []
@@ -410,3 +400,13 @@ class LaserGun(Weapon):
             )
             pygame.draw.line(entities.screen, (255, 0, 0), start_pos, end_pos, 3)
 
+
+types = {
+    "Laser": {
+        "icon": "assets/weapons/laser.png",
+        "ressources": { "Ultranium": 10, }
+    },
+    "MineLayer": {
+        "ressources": { "Meganites": 10, "Charbonium": 6 } # Example costs (assuming Explosium exists)
+    }
+}
