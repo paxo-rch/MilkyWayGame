@@ -334,8 +334,6 @@ class Player:
                         for i in Object.objects:
                             if i in self.accessible_planets_object:
                                 map_box = Box(i.x-50,i.y-50,(110,110),relative_zoom=True,relative_coords=True,transparent_bg=True,border_color=(0,255,0),border_width=10,border_radius=10,z=1)
-                                """else:
-                                map_box = Box(i.x-50,i.y-50,(110,110),relative_zoom=True,relative_coords=True,transparent_bg=True,border_color=(255,0,0),border_width=10,border_radius=10)"""
                                 self.map_objects.append(map_box)
                     else:
                         map_text.destroy()
@@ -376,7 +374,7 @@ class Player:
                                     color = (255,0,0)
                                     
                             y_offset = SCREEN_HEIGHT / 4 + button_height * id - 12
-                            btn = Button("", SCREEN_WIDTH / 2 + 30, y_offset + 25, 25, (SCREEN_WIDTH / 3 - 60, button_height - 25), background_color=color, border_color=color, relative_coords=False, relative_zoom=False, border_radius=20, border_width=20, z=5,callback=self.clicked)
+                            btn = Button("", SCREEN_WIDTH / 2 + 30, y_offset + 25, 25, (SCREEN_WIDTH / 3 - 60, button_height - 25), background_color=color, border_color=color, relative_coords=False, relative_zoom=False, border_radius=20, border_width=20, z=5,callback=lambda i=i : Buy(i))
                             defense_text = Text(i, SCREEN_WIDTH / 2 + 45, y_offset + 35, int(text_size), relative_coords=False, relative_zoom=False, z=5)
                             cost_text = Text("Cost: " + str(weapons.types[i]["ressources"]), SCREEN_WIDTH / 2 + 45, y_offset + 35 + int(text_size), int(text_size // 2), relative_coords=False, relative_zoom=False, z=5)
                             inventory_items.append(btn)
@@ -490,10 +488,10 @@ class Player:
                 gui.update_fps.setText("PUS: " + str(round(1/end)))
             else:
                 gui.update_fps.setText("")
-            
-
-
-
+def Buy(weapon):
+    for j in weapons.types[weapon]["ressources"].keys():
+        if player.ressources[j] < weapons.types[weapon]["ressources"][j]:
+            pass
 class Sondes:
 
     def __init__(self,planets,n,parent=None):
