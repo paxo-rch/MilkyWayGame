@@ -114,6 +114,9 @@ class Player:
         self.landing_count = 1
         self.distance = 0
 
+        self.kills = 0
+        self.death = 1
+
         self.weapons = []
         self.hull_hp = 100
         self.shield_hp = 100
@@ -171,6 +174,7 @@ class Player:
         self.ressources["Charbonites"] = 100
         self.throw = False
         self.thrust = False
+        self.death += 1
 
     def applyDamage(self, damage):
         if self.throw:
@@ -473,7 +477,7 @@ class Player:
                     self.angle = math.atan2(rel_y,rel_x)
 
             if(self.throw and pygame.mouse.get_pressed()[0] and self.reloadTime < Object.t - 0.05):
-                weapons.Projectile(self.x, self.y, self.angle, 20, 10, bot_player)
+                weapons.Projectile(self.x, self.y, self.angle, 30, 10, bot_player)
                 self.reloadTime = Object.t
             
 

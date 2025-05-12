@@ -47,6 +47,8 @@ class Bot(Player):
 
         #Path settings
         self.sonde_number = 10
+        self.kills = 0
+        self.death = 0
 
         #Path variables
         self.accessible_planets = []
@@ -61,6 +63,22 @@ class Bot(Player):
             self.flame_animation.append(pygame.image.load(f"assets/player/flame_gif/{f}.gif"))
 
         self.i = 0
+
+    def die(self, count_as_a_kill=True):
+        self.hull_hp = 100
+        self.shield_hp = 100
+        self.x = self.spawn_planet.getAbsoluteX()
+        self.y = self.spawn_planet.getAbsoluteY()
+        self.score = 0
+        self.distance = 0
+        self.landing_count = 1
+        self.ressources["Charbonites"] = 100
+        self.throw = False
+        self.thrust = False
+        self.death += 1
+
+        if(count_as_a_kill):
+            entities.player.kills += 1
     
     def draw(self):
         a_mvt = self.angle
@@ -81,7 +99,7 @@ class Bot(Player):
 
     def update(self):
         if(self.hull_hp <= 0 or self.ressources["Charbonites"] <= 0):
-            self.die()
+            self.die(False)
             self.ai_state = 0
         
         if self.throw:

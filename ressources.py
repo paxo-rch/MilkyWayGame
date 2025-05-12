@@ -77,7 +77,7 @@ def generate_ressources(planet_type):
         ressources = {
             "Chromites": 5,
             "Chromium": 10,
-            "Charbonites": 10,
+            "Charbonites": 20,
             "Charbonium": 1,
             "Meganites": 10,
             "Meganium": 10,
