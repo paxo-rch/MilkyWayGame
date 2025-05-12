@@ -16,15 +16,6 @@ types = {
         "icon": "assets/weapons/laser.png",
         "ressources": { "Ultranium": 1, }
     },
-    "MissileLauncher": {
-        "ressources": { "Meganites": 5, "Charbonites": 2 } # Example costs
-    },
-    "PulseCannon": {
-        "ressources": { "Meganium": 3, "Meganites": 1 } # Example costs
-    },
-    "SlowField": {
-        "ressources": { "Chromites": 4 } # Example costs
-    },
     "MineLayer": {
         "ressources": { "Meganites": 3, "Charbonium": 2 } # Example costs (assuming Explosium exists)
     }
@@ -85,6 +76,36 @@ class Weapon:
         for weapon in Weapon.weapons:
             weapon.drawTick()
 
+# --- Mine Layer (New Class) ---
+class MineLayer(Weapon):
+    def __init__(self, planet, targets):
+        super().__init__(planet, None)
+        self.mines = []
+        self.mode = 0 # 0->waiting, 1->animating
+        self.animation_frame = 0
+        self.animation_end = 30
+        self.damage = 100
+        self.range = 100
+        self.targets = targets
+
+    def onNearPass(self, target):
+        if(self.mode == 0):
+            for t in self.targets:
+                if(t.planet == self.planet):
+                    t.applyDamage(self.damage)
+                    self.mode = 1
+                    self.animation_frame = 0
+        
+
+    def drawTick(self):
+        if(self.mode == 1):
+            pygame.draw.circle(entities.screen, (255, 0, 0), (int(graphics.posX(self.planet.getAbsoluteX())), int(graphics.posY(self.planet.getAbsoluteY()))), int(self.animation_frame / self.animation_end * self.range * entities.player.zoom), 3)
+            self.animation_frame += 1
+            if(self.animation_frame >= self.animation_end):
+                self.mode = 2
+                self.animation_frame = 0
+                self.__del__()
+
 # --- Laser Weapon (Mostly Unchanged) ---
 class Laser(Weapon):
     def __init__(self, planet, targets):
@@ -125,14 +146,13 @@ class Laser(Weapon):
             if self.state and self.current_target == nearest_target:
                 self.state = False
                 self.current_target = None
-
     def drawTick(self):
         if self.state and self.current_target:
             self.animation_timer += 1
             start_pos = (graphics.posX(self.planet.x), graphics.posY(self.planet.y))
             end_pos = (graphics.posX(self.current_target.x), graphics.posY(self.current_target.y))
             pulse_factor = (sin(self.animation_timer * self.pulse_speed) + 1) / 2.0
-            current_glow_thickness = int(self.glow_thickness_min + (self.glow_thickness_max - self.glow_thickness_min) * pulse_factor)
+            current_glow_thickness = int((self.glow_thickness_min + (self.glow_thickness_max - self.glow_thickness_min) * pulse_factor) * graphics.player.zoom)
             current_core_color = (
                 int(self.core_color_dim[0] + (self.core_color_bright[0] - self.core_color_dim[0]) * pulse_factor),
                 int(self.core_color_dim[1] + (self.core_color_bright[1] - self.core_color_dim[1]) * pulse_factor),
@@ -142,7 +162,7 @@ class Laser(Weapon):
             if self.core_thickness == 1:
                 pygame.draw.aaline(entities.screen, current_core_color, start_pos, end_pos)
             else:
-                pygame.draw.line(entities.screen, current_core_color, start_pos, end_pos, self.core_thickness)
+                pygame.draw.line(entities.screen, current_core_color, start_pos, end_pos, int(self.core_thickness * graphics.player.zoom))
 
 
 class Missile(Weapon):

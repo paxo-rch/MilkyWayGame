@@ -177,15 +177,19 @@ class Player:
         self.death += 1
 
     def applyDamage(self, damage):
-        if self.throw:
-            if self.shield_hp > 0:
-                self.shield_hp -= damage*0.5
-                pygame.draw.circle(screen, (0, 0, 255), (posX(self.x), posY(self.y)), 30 * player.zoom, width=3)
-                return
+        if(self.shield_hp - damage <= 0):
             self.shield_hp = 0
-            self.hull_hp -= damage
-            if self.hull_hp <= 0:
-                self.die()
+            self.hull_hp -= damage - self.shield_hp
+            return
+    
+        if self.shield_hp > 0:
+            self.shield_hp -= damage*0.5
+            pygame.draw.circle(screen, (0, 0, 255), (posX(self.x), posY(self.y)), 30 * player.zoom, width=3)
+            return
+        self.shield_hp = 0
+        self.hull_hp -= damage
+        if self.hull_hp <= 0:
+            self.die()
 
     def draw(self):
         a_mvt = self.angle

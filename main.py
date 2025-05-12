@@ -85,7 +85,8 @@ laser = weapons.Laser(entities.Object.objects[0], entities.bot_players)
 threading.Thread(target=entities.player.update,args=()).start()
 
 
-
+for i in entities.Object.objects:
+    MineLayer = weapons.MineLayer(i, entities.bot_players)
 
 
 r = 0
