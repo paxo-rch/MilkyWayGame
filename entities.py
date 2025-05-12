@@ -30,6 +30,7 @@ class Object:
         self.children = []
         self.reference = None
         self.weapons = []
+        self.weapons_name = []
         self.rotation = random.random() * 2 * math.pi
 
 
@@ -210,7 +211,53 @@ class Player:
 
         if(not self.throw):
             pygame.draw.line(screen, (255, 255, 255), (posX(self.x), posY(self.y)), (posX(self.x + math.cos(self.angle) * self.projection_length), posY(self.y + math.sin(self.angle) * self.projection_length)))
-    
+    def ToggleInventory(self):
+        self.inventory_opened = not self.inventory_opened
+        if self.inventory_opened:
+            self.inventory_items = []
+            self.inventory_box = Box(SCREEN_WIDTH/6,SCREEN_HEIGHT/6,(SCREEN_WIDTH/1.5,SCREEN_HEIGHT/1.5),relative_coords=False,relative_zoom=False,background_color=(102, 102, 102),border_color=(102, 102, 102),border_radius=20,border_width=20,z=4)
+            self.box_ressource = Box(SCREEN_WIDTH/6+15,SCREEN_HEIGHT/4,(SCREEN_WIDTH/3-30,SCREEN_HEIGHT/1.5-100),relative_coords=False,relative_zoom=False,border_color=(51,51,51),background_color=(51,51,51),border_radius=20,border_width=20,z=5)
+            self.box_planet_defense = Box(SCREEN_WIDTH/2+15,SCREEN_HEIGHT/4,(SCREEN_WIDTH/3-30,SCREEN_HEIGHT/1.5-100),relative_coords=False,relative_zoom=False,border_color=(51,51,51),background_color=(51,51,51),border_radius=20,border_width=20,z=5)
+            self.inventory_text = Text("Inventory",SCREEN_WIDTH/6+15,SCREEN_HEIGHT/6+15,100,relative_coords=False,relative_zoom=False,z=5)
+            n = 0
+            for i in self.ressources.keys():
+                inventory_ressource = Text(str(i)+": "+str(round(self.ressources[i],1)),SCREEN_WIDTH/6+90,SCREEN_HEIGHT/4 + 15  + 50*n,50,relative_coords=False,relative_zoom=False,z=5)
+                self.inventory_items.append(inventory_ressource)
+                n += 1
+            for id, i in enumerate(ressources.types):
+                icon = ressources.icons[i]
+                if icon != "":
+                    img = Image(pygame.transform.scale(pygame.image.load(icon), (50, 50)),scale=1,fixed=True, x = SCREEN_WIDTH/6+30, y = SCREEN_HEIGHT/4 + 7 + 50 * id, z = 5)
+                    self.inventory_items.append(img)
+            item_count = len(weapons.types)
+            if item_count > 5:
+                button_height = int((SCREEN_HEIGHT / 1.5 - 112) / item_count)
+                text_size = max(25, button_height // 2)
+            else:
+                button_height = int((SCREEN_HEIGHT / 1.5 - 112)/5)
+                text_size = max(25, button_height // 2)
+            
+            for id, i in enumerate(weapons.types):
+                color = (0,255,0)
+                for j in weapons.types[i]["ressources"].keys():
+                    if self.ressources[j] < weapons.types[i]["ressources"][j] or i in self.planet.weapons_name:
+                        color = (255,0,0)
+                        
+                y_offset = SCREEN_HEIGHT / 4 + button_height * id - 12
+                btn = Button("", SCREEN_WIDTH / 2 + 30, y_offset + 25, 25, (SCREEN_WIDTH / 3 - 60, button_height - 25), background_color=color, border_color=color, relative_coords=False, relative_zoom=False, border_radius=20, border_width=20, z=5,callback=lambda i=i : self.Buy(i))
+                defense_text = Text(i, SCREEN_WIDTH / 2 + 45, y_offset + 35, int(text_size), relative_coords=False, relative_zoom=False, z=5)
+                cost_text = Text("Cost: " + str(weapons.types[i]["ressources"]), SCREEN_WIDTH / 2 + 45, y_offset + 35 + int(text_size), int(text_size // 2), relative_coords=False, relative_zoom=False, z=5)
+                self.inventory_items.append(btn)
+                self.inventory_items.append(defense_text)
+                self.inventory_items.append(cost_text)
+        else:
+            for i in self.inventory_items:
+                i.destroy()
+            self.inventory_items = []
+            self.box_planet_defense.destroy()
+            self.box_ressource.destroy()
+            self.inventory_text.destroy()
+            self.inventory_box.destroy()
     def update(self):
         if(self.hull_hp <= 0 or self.ressources["Charbonites"] <= 0):
             self.die()
@@ -354,48 +401,7 @@ class Player:
                     self.debug = not self.debug
                 elif not self.calculating and keys[pygame.K_e] and time.time() > button_delay + self.btn_delay:
                     button_delay = time.time()
-                    self.inventory_opened = not self.inventory_opened
-                    if self.inventory_opened:
-                        inventory_items = []
-                        inventory_box = Box(SCREEN_WIDTH/6,SCREEN_HEIGHT/6,(SCREEN_WIDTH/1.5,SCREEN_HEIGHT/1.5),relative_coords=False,relative_zoom=False,background_color=(102, 102, 102),border_color=(102, 102, 102),border_radius=20,border_width=20,z=4)
-                        box_ressource = Box(SCREEN_WIDTH/6+15,SCREEN_HEIGHT/4,(SCREEN_WIDTH/3-30,SCREEN_HEIGHT/1.5-100),relative_coords=False,relative_zoom=False,border_color=(51,51,51),background_color=(51,51,51),border_radius=20,border_width=20,z=5)
-                        box_planet_defense = Box(SCREEN_WIDTH/2+15,SCREEN_HEIGHT/4,(SCREEN_WIDTH/3-30,SCREEN_HEIGHT/1.5-100),relative_coords=False,relative_zoom=False,border_color=(51,51,51),background_color=(51,51,51),border_radius=20,border_width=20,z=5)
-                        inventory_text = Text("Inventory",SCREEN_WIDTH/6+15,SCREEN_HEIGHT/6+15,100,relative_coords=False,relative_zoom=False,z=5)
-                        n = 0
-                        for i in self.ressources.keys():
-                            inventory_ressource = Text(str(i)+": "+str(round(self.ressources[i],1)),SCREEN_WIDTH/6+90,SCREEN_HEIGHT/4 + 15  + 50*n,50,relative_coords=False,relative_zoom=False,z=5)
-                            inventory_items.append(inventory_ressource)
-                            n += 1
-                        for id, i in enumerate(ressources.types):
-                            icon = ressources.icons[i]
-                            if icon != "":
-                                img = Image(pygame.transform.scale(pygame.image.load(icon), (50, 50)),scale=0.1,fixed=True, x = SCREEN_WIDTH/6+30, y = SCREEN_HEIGHT/4 + 7 + 50 * id, z = 5)
-                                inventory_items.append(img)
-                        item_count = len(weapons.types)
-                        button_height = int((SCREEN_HEIGHT / 1.5 - 112) / item_count)
-                        text_size = max(25, button_height // 2)
-                        
-                        for id, i in enumerate(weapons.types):
-                            color = (0,255,0)
-                            for j in weapons.types[i]["ressources"].keys():
-                                if self.ressources[j] < weapons.types[i]["ressources"][j]:
-                                    color = (255,0,0)
-                                    
-                            y_offset = SCREEN_HEIGHT / 4 + button_height * id - 12
-                            btn = Button("", SCREEN_WIDTH / 2 + 30, y_offset + 25, 25, (SCREEN_WIDTH / 3 - 60, button_height - 25), background_color=color, border_color=color, relative_coords=False, relative_zoom=False, border_radius=20, border_width=20, z=5,callback=lambda i=i : Buy(i))
-                            defense_text = Text(i, SCREEN_WIDTH / 2 + 45, y_offset + 35, int(text_size), relative_coords=False, relative_zoom=False, z=5)
-                            cost_text = Text("Cost: " + str(weapons.types[i]["ressources"]), SCREEN_WIDTH / 2 + 45, y_offset + 35 + int(text_size), int(text_size // 2), relative_coords=False, relative_zoom=False, z=5)
-                            inventory_items.append(btn)
-                            inventory_items.append(defense_text)
-                            inventory_items.append(cost_text)
-                    else:
-                        for i in inventory_items:
-                            i.destroy()
-                        inventory_items = []
-                        box_planet_defense.destroy()
-                        box_ressource.destroy()
-                        inventory_text.destroy()
-                        inventory_box.destroy()
+                    self.ToggleInventory()
 
                 mouseState = pygame.mouse.get_pressed()[0]
 
@@ -496,11 +502,17 @@ class Player:
                 gui.update_fps.setText("PUS: " + str(round(1/end)))
             else:
                 gui.update_fps.setText("")
-def Buy(weapon):
-    if weapon not in player.planet.weapons:
-        for j in weapons.types[weapon]["ressources"].keys():
-            if player.ressources[j] >= weapons.types[weapon]["ressources"][j]:
-                weapons.Laser(player.planet, bot_player)
+    def Buy(self,weapon):
+        if weapon not in player.planet.weapons_name:
+            for j in weapons.types[weapon]["ressources"].keys():
+                if player.ressources[j] < weapons.types[weapon]["ressources"][j]:
+                    return
+            weapons.Laser(player.planet, bot_players)
+            player.planet.weapons_name.append(weapon)
+            for i in weapons.types[weapon]["ressources"].keys():
+                player.ressources[i] -= weapons.types[weapon]["ressources"][i]
+            self.ToggleInventory()
+            self.ToggleInventory()
 class Sondes:
 
     def __init__(self,planets,n,parent=None):

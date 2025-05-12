@@ -43,6 +43,8 @@ class Box:
         if z not in hierarchy_list.keys():
             hierarchy_list[z] = []
         hierarchy_list[z].append(self)
+        self.render_bg = pygame.rect.Rect(self.x+self.border_width/2,self.y+self.border_width/2,self.size[0]-self.border_width,self.size[1]-self.border_width)
+        self.render_border = pygame.rect.Rect(self.x,self.y,self.size[0],self.size[1])
     def update(self):
         if self.master_object != None:
             self.x,self.y = (self.master_object.x-self.coords_to_master[0]/player.zoom,self.master_object.y-self.coords_to_master[1]/player.zoom)
