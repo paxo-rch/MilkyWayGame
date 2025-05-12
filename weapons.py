@@ -87,8 +87,8 @@ class Weapon:
 
 # --- Laser Weapon (Mostly Unchanged) ---
 class Laser(Weapon):
-    def __init__(self, planet, target):
-        super().__init__(planet, target)
+    def __init__(self, planet, targets):
+        super().__init__(planet, targets)
         self.name = "Laser"
         self.range = 4000
         self.state = False
@@ -104,17 +104,25 @@ class Laser(Weapon):
         self.damage_per_tick = 0.1 # Damage applied per frame when active
 
     def onNearPass(self, target):
-        distance = hypot(target.x - self.planet.x, target.y - self.planet.y)
+        nearest_target = None
+        nearest_distance = float('inf')
 
-        if distance < self.range:
+        for t in self.target:
+            distance = hypot(t.x - self.planet.x, t.y - self.planet.y)
+
+            if distance < nearest_distance:
+                nearest_distance = distance
+                nearest_target = t
+
+        if nearest_distance < self.range:
             if not self.state:
                 self.animation_timer = 0
             self.state = True
-            self.current_target = target
-            target.hull_hp -= self.damage_per_tick
+            self.current_target = nearest_target
+            nearest_target.hull_hp -= self.damage_per_tick
 
         else:
-            if self.state and self.current_target == target:
+            if self.state and self.current_target == nearest_target:
                 self.state = False
                 self.current_target = None
 

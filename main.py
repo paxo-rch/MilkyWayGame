@@ -79,7 +79,7 @@ for i in range(10):
     threading.Thread(target=bot_player.update,args=()).start()
     entities.bot_players.append(bot_player)
 
-laser = weapons.Laser(entities.Object.objects[0], bot_player)
+laser = weapons.Laser(entities.Object.objects[0], entities.bot_players)
 
 # Start the player thread
 threading.Thread(target=entities.player.update,args=()).start()
