@@ -110,7 +110,7 @@ class Laser(Weapon):
         for t in self.target:
             distance = hypot(t.x - self.planet.x, t.y - self.planet.y)
 
-            if distance < nearest_distance:
+            if not(t.ai_state == 0 or t.ai_state == 1) and distance < nearest_distance:
                 nearest_distance = distance
                 nearest_target = t
 
