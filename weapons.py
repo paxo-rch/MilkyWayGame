@@ -14,19 +14,10 @@ import time # Potentially useful for cooldowns, using frame counter for now
 types = {
     "Laser": {
         "icon": "assets/weapons/laser.png",
-        "ressources": { "Ultranium": 1, }
-    },
-    "MissileLauncher": {
-        "ressources": { "Meganites": 5, "Charbonites": 2 } # Example costs
-    },
-    "PulseCannon": {
-        "ressources": { "Meganium": 3, "Meganites": 1 } # Example costs
-    },
-    "SlowField": {
-        "ressources": { "Chromites": 4 } # Example costs
+        "ressources": { "Ultranium": 10, }
     },
     "MineLayer": {
-        "ressources": { "Meganites": 3, "Charbonium": 2 } # Example costs (assuming Explosium exists)
+        "ressources": { "Meganites": 30, "Charbonium": 20 } # Example costs (assuming Explosium exists)
     }
 }
 
@@ -119,7 +110,7 @@ class Laser(Weapon):
                 self.animation_timer = 0
             self.state = True
             self.current_target = nearest_target
-            nearest_target.hull_hp -= self.damage_per_tick
+            nearest_target.applyDamage(self.damage_per_tick)
 
         else:
             if self.state and self.current_target == nearest_target:

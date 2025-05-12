@@ -35,7 +35,7 @@ class Bot(Player):
         self.visited_planets = [[planet.getAbsoluteX(), planet.getAbsoluteY()]]
         self.distance = 0
         self.hull_hp = 100
-        self.shield_hp = 100
+        self.shield_hp = 0
         self.imprecision = 0
         #Ship level
         self.detector_level = 10
@@ -66,7 +66,7 @@ class Bot(Player):
 
     def die(self, count_as_a_kill=True):
         self.hull_hp = 100
-        self.shield_hp = 100
+        self.shield_hp = 0
         self.x = self.spawn_planet.getAbsoluteX()
         self.y = self.spawn_planet.getAbsoluteY()
         self.score = 0
