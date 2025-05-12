@@ -4,11 +4,13 @@ import time
 MAP_SCALE = 10
 MAP_WIDTH = 1080 * MAP_SCALE
 MAP_HEIGHT = 1080 * MAP_SCALE
-SCREEN_WIDTH = 1920
-SCREEN_HEIGHT = 1080
+pygame.display.init()
+infoObject = pygame.display.Info()
+SCREEN_WIDTH = infoObject.current_w
+SCREEN_HEIGHT = infoObject.current_h
 
 pygame.init()
-screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
+screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT),pygame.FULLSCREEN)
 
 player = None # Placeholder for the player object
 
