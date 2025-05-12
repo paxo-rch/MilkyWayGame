@@ -17,7 +17,7 @@ types = {
         "ressources": { "Ultranium": 10, }
     },
     "MineLayer": {
-        "ressources": { "Meganites": 30, "Charbonium": 20 } # Example costs (assuming Explosium exists)
+        "ressources": { "Meganites": 10, "Charbonium": 6 } # Example costs (assuming Explosium exists)
     }
 }
 

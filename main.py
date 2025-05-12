@@ -1,12 +1,8 @@
 import pygame
-import math
 import random
 import time
 import threading
 import time
-import socket
-import numpy as np
-import multiprocessing
 
 # custom libraries
 import planets
