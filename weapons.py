@@ -263,7 +263,7 @@ class Missile(Weapon):
 
 
 class Projectile(Weapon):
-    def __init__(self, x, y, angle, speed, damage, target):
+    def __init__(self, x, y, angle, speed, damage, targets):
         super().__init__(None, None)
         self.x = x
         self.y = y
@@ -273,15 +273,17 @@ class Projectile(Weapon):
         self.speed = speed
         self.damage = damage
         self.timeleft = entities.Object.t + 1
-        self.target = target
+        self.targets = targets
         
 
     def onNearPass(self, target):
         self.x += cos(self.angle) * self.speed + self.basevx/10
         self.y += sin(self.angle) * self.speed + self.basevy/10
-        if(hypot(self.x - self.target.x, self.y - self.target.y) < 20):
-            target.applyDamage(self.damage)
-            super().__del__()
+        
+        for i in self.targets:
+            if(hypot(self.x - i.x, self.y - i.y) < 20):
+                i.applyDamage(self.damage)
+                super().__del__()
         if(self.timeleft < entities.Object.t):
             self.is_active = False
             super().__del__()

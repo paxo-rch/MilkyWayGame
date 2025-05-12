@@ -73,12 +73,11 @@ for i in range(PLANET_NUMBER):
 # The player is responsible for updating its position and throw state
 graphics.player = entities.Player(entities.Object.objects[0])
 entities.player = graphics.player
-bots = []
+
 for i in range(10):
     bot_player = bot.Bot(random.choice(entities.Object.objects))
-    entities.bot_player = bot_player
     threading.Thread(target=bot_player.update,args=()).start()
-    bots.append(bot_player)
+    entities.bot_players.append(bot_player)
 
 laser = weapons.Laser(entities.Object.objects[0], bot_player)
 
@@ -115,7 +114,7 @@ while True:
         i.drawAll()
 
     entities.player.draw()
-    for i in bots:
+    for i in bot.bot_players:
         i.draw()
         i.update()
         

@@ -10,7 +10,7 @@ import gui
 import ressources
 import weapons
 
-bot_player = None
+bot_players = []
 
 class Object:
     t = 0
@@ -478,8 +478,8 @@ class Player:
                 if pygame.mouse.get_pressed()[2]:
                     self.angle = math.atan2(rel_y,rel_x)
 
-            if(self.throw and pygame.mouse.get_pressed()[0] and self.reloadTime < Object.t - 0.05):
-                weapons.Projectile(self.x, self.y, self.angle, 30, 10, bot_player)
+            if(self.throw and pygame.mouse.get_pressed()[0] and self.reloadTime < Object.t - 0.001):
+                weapons.Projectile(self.x, self.y, self.angle, 60, 10, bot_players)
                 self.reloadTime = Object.t
             
 
