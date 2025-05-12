@@ -98,9 +98,10 @@ class Bot(Player):
         screen.blit(rotated_sprite, (posX(self.x)-rotated_sprite.get_width()//2, posY(self.y)-rotated_sprite.get_height()//2))
 
     def update(self):
-        if(self.hull_hp <= 0 or self.ressources["Charbonites"] <= 0):
+        if(self.hull_hp <= 0 or self.ressources["Charbonites"] <= 0 or (self.ai_state == 0 and self.ressources["Charbonites"] < 10)):
             self.die(False)
             self.ai_state = 0
+            self.ressources["Charbonites"] = 100
         
         if self.throw:
             for i in Object.objects:    # physics

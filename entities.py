@@ -181,9 +181,7 @@ class Player:
         if(self.shield_hp - damage <= 0):
             self.shield_hp = 0
             self.hull_hp -= damage - self.shield_hp
-            return
-    
-        if self.shield_hp > 0:
+        elif self.shield_hp > 0:
             self.shield_hp -= damage*0.5
             pygame.draw.circle(screen, (0, 0, 255), (posX(self.x), posY(self.y)), 30 * player.zoom, width=3)
             return
