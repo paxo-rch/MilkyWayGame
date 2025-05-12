@@ -10,7 +10,7 @@ imagelune = Image(pygame.image.load("assets/moons/moon1.png"))
 
 mytext = Text("", SCREEN_WIDTH*0.19, SCREEN_HEIGHT*0.9, 50, relative_coords=False,relative_zoom=False, color=(255,255,255))
 fuel_img = Image(pygame.image.load("assets/emoji/fuelpump.png"),scale=0.2,x=SCREEN_WIDTH*0.23,y=SCREEN_HEIGHT*0.9,fixed=True)
-score = Text("Score: ", SCREEN_WIDTH*0.05, SCREEN_HEIGHT*0.05, 50, relative_coords=False,relative_zoom=False, color=(255,255,255))
+score = Text("KDR ratio: ", SCREEN_WIDTH*0.05, SCREEN_HEIGHT*0.05, 50, relative_coords=False,relative_zoom=False, color=(255,255,255))
 fps_text = Text("", SCREEN_WIDTH*0.05, SCREEN_HEIGHT*0.1, 50, relative_coords=False,relative_zoom=False, color=(255,255,255))
 update_fps = Text("", SCREEN_WIDTH*0.05, SCREEN_HEIGHT*0.2, 50, relative_coords=False,relative_zoom=False, color=(255,255,255))
 sonde_update = Text("", SCREEN_WIDTH*0.05, SCREEN_HEIGHT*0.15, 50, relative_coords=False,relative_zoom=False, color=(255,255,255))	

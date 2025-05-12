@@ -114,6 +114,9 @@ class Player:
         self.landing_count = 1
         self.distance = 0
 
+        self.kills = 0
+        self.death = 1
+
         self.weapons = []
         self.hull_hp = 100
         self.shield_hp = 100
@@ -171,6 +174,7 @@ class Player:
         self.ressources["Charbonites"] = 100
         self.throw = False
         self.thrust = False
+        self.death += 1
 
     def applyDamage(self, damage):
         if self.throw:
@@ -376,7 +380,7 @@ class Player:
                                     color = (255,0,0)
                                     
                             y_offset = SCREEN_HEIGHT / 4 + button_height * id - 12
-                            btn = Button("", SCREEN_WIDTH / 2 + 30, y_offset + 25, 25, (SCREEN_WIDTH / 3 - 60, button_height - 25), background_color=color, border_color=color, relative_coords=False, relative_zoom=False, border_radius=20, border_width=20, z=5,callback=self.clicked)
+                            btn = Button("", SCREEN_WIDTH / 2 + 30, y_offset + 25, 25, (SCREEN_WIDTH / 3 - 60, button_height - 25), background_color=color, border_color=color, relative_coords=False, relative_zoom=False, border_radius=20, border_width=20, z=5)
                             defense_text = Text(i, SCREEN_WIDTH / 2 + 45, y_offset + 35, int(text_size), relative_coords=False, relative_zoom=False, z=5)
                             cost_text = Text("Cost: " + str(weapons.types[i]["ressources"]), SCREEN_WIDTH / 2 + 45, y_offset + 35 + int(text_size), int(text_size // 2), relative_coords=False, relative_zoom=False, z=5)
                             inventory_items.append(btn)
@@ -475,7 +479,7 @@ class Player:
                     self.angle = math.atan2(rel_y,rel_x)
 
             if(self.throw and pygame.mouse.get_pressed()[0] and self.reloadTime < Object.t - 0.05):
-                weapons.Projectile(self.x, self.y, self.angle, 20, 10, bot_player)
+                weapons.Projectile(self.x, self.y, self.angle, 30, 10, bot_player)
                 self.reloadTime = Object.t
             
 

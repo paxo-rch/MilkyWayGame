@@ -129,7 +129,7 @@ while True:
         i.update()
 
     gui.mytext.setText(str(round(entities.player.ressources["Charbonites"],1)))
-    gui.score.setText("Score: " + str(entities.player.score))
+    gui.score.setText("KDR ratio: " + str(entities.player.kills/entities.player.death))
     gui.hull_pv.setText(str(entities.player.hull_hp))
     gui.shield_pv.setText(str(entities.player.shield_hp))
     if entities.player.debug:
