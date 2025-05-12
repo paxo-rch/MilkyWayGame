@@ -496,7 +496,7 @@ def Buy(weapon):
     if weapon not in player.planet.weapons:
         for j in weapons.types[weapon]["ressources"].keys():
             if player.ressources[j] >= weapons.types[weapon]["ressources"][j]:
-                weapons.Laser(player.planet, bot_player)
+                weapons.Laser(player.planet, bot_players)
 class Sondes:
 
     def __init__(self,planets,n,parent=None):
