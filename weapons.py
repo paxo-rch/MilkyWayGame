@@ -104,22 +104,23 @@ class Laser(Weapon):
         self.damage_per_tick = 0.1 # Damage applied per frame when active
 
     def onNearPass(self, target):
-        distance = hypot(target.x - self.planet.x, target.y - self.planet.y)
+        if not (self.target.ai_state == 0 or self.target.ai_state == 1):
+            distance = hypot(target.x - self.planet.x, target.y - self.planet.y)
 
-        if distance < self.range:
-            if not self.state:
-                self.animation_timer = 0
-            self.state = True
-            self.current_target = target
-            target.hull_hp -= self.damage_per_tick
+            if distance < self.range:
+                if not self.state:
+                    self.animation_timer = 0
+                self.state = True
+                self.current_target = target
+                target.hull_hp -= self.damage_per_tick
 
-        else:
-            if self.state and self.current_target == target:
-                self.state = False
-                self.current_target = None
+            else:
+                if self.state and self.current_target == target:
+                    self.state = False
+                    self.current_target = None
 
     def drawTick(self):
-        if self.state and self.current_target:
+        if self.state and self.current_target and not (self.target.ai_state == 0 or self.target.ai_state == 1):
             self.animation_timer += 1
             start_pos = (graphics.posX(self.planet.x), graphics.posY(self.planet.y))
             end_pos = (graphics.posX(self.current_target.x), graphics.posY(self.current_target.y))

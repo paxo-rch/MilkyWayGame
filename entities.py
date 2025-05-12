@@ -493,9 +493,10 @@ class Player:
             else:
                 gui.update_fps.setText("")
 def Buy(weapon):
-    for j in weapons.types[weapon]["ressources"].keys():
-        if player.ressources[j] < weapons.types[weapon]["ressources"][j]:
-            pass
+    if weapon not in player.planet.weapons:
+        for j in weapons.types[weapon]["ressources"].keys():
+            if player.ressources[j] >= weapons.types[weapon]["ressources"][j]:
+                weapons.Laser(player.planet, bot_player)
 class Sondes:
 
     def __init__(self,planets,n,parent=None):

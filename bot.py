@@ -35,7 +35,7 @@ class Bot(Player):
         self.visited_planets = [[planet.getAbsoluteX(), planet.getAbsoluteY()]]
         self.distance = 0
         self.hull_hp = 100
-        self.shield_hp = 0
+        self.shield_hp = 100
         self.imprecision = 0
         #Ship level
         self.detector_level = 10
