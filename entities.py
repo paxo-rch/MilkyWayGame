@@ -6,7 +6,6 @@ import threading
 
 from graphics import *
 import gui
-
 import ressources
 import weapons
 
@@ -114,7 +113,7 @@ class Player:
         self.thrust = False # State: True if thrusting
         self.landing_count = 1 # Number of successful landings
         self.distance = 0 # Total distance traveled
-
+        self.menu = True
         self.kills = 0 # Player kills
         self.death = 1 # Player deaths
 
@@ -174,6 +173,7 @@ class Player:
         self.btn_delay = 0.5 # Minimum time between button presses
 
         self.reloadTime = Object.t # Time when the weapon was last fired
+        
 
     def die(self):
         # Reset player state upon death

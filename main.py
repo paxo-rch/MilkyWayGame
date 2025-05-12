@@ -13,6 +13,12 @@ import gui
 import graphics
 import ressources
 
+def ExitMenu():
+    Menu_bg.destroy()
+    text_menu.destroy()
+    Button_play.destroy()
+    entities.player.menu = False
+
 PLANET_NUMBER = 500
 MOON_NUMBER = 3
 
@@ -23,7 +29,6 @@ fps = 0
 
 imageplanete = graphics.Image(pygame.image.load("assets/planets/planet1.png"),scale=0.1)
 imagelune = graphics.Image(pygame.image.load("assets/moons/moon1.png"))
-
 
 
 
@@ -70,16 +75,20 @@ for i in range(PLANET_NUMBER):
 graphics.player = entities.Player(entities.Object.objects[0])
 entities.player = graphics.player
 
+
+
+
+# Start the player thread
+threading.Thread(target=entities.player.update,args=()).start()
+
 for i in range(10):
     bot_player = bot.Bot(random.choice(entities.Object.objects))
     threading.Thread(target=bot_player.update,args=()).start()
     entities.bot_players.append(bot_player)
 
-laser = weapons.Laser(entities.Object.objects[0], entities.bot_players)
-
-# Start the player thread
-threading.Thread(target=entities.player.update,args=()).start()
-
+Menu_bg = graphics.Box(0,0,(graphics.SCREEN_WIDTH,graphics.SCREEN_HEIGHT),False,False,False,False,(51,51,51),(51,51,51),0,0)
+text_menu = graphics.Text("Galaxy Conquest",graphics.SCREEN_WIDTH//2,graphics.SCREEN_HEIGHT//2,60,relative_coords=False,relative_zoom=False,color=(255,255,255))
+Button_play = graphics.Button("Play",graphics.SCREEN_WIDTH//2,graphics.SCREEN_HEIGHT//1.5,60,(200,50),False,False,(255,255,255),False,False,(0,0,0),(0,0,0),20,20,callback=ExitMenu)
 r = 0
 
 planets.Planet.update_images()
@@ -135,4 +144,4 @@ while True:
 
     pygame.display.update()
     fps = time.perf_counter() - start
-    
+
